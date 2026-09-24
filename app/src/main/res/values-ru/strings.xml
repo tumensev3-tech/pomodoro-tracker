@@ -18,6 +18,8 @@
     <string name="action_reset">Сброс</string>
     <string name="cd_settings">Настройки</string>
     <string name="cd_play_pause">Старт или пауза</string>
+    <string name="cd_choose_project">Выбрать активность из списка</string>
+    <string name="title_choose_project">Выберите активность</string>
     <!-- Озвучивается для циферблата: что делает таймер и сколько осталось от фазы. -->
     <string name="cd_dial_running">Идёт, осталось %1$s из %2$s</string>
     <string name="cd_dial_paused">Пауза, осталось %1$s из %2$s</string>
