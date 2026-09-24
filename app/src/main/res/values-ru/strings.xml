@@ -93,7 +93,7 @@
     <string name="vibration_short">Короткая</string>
     <string name="vibration_medium">Средняя</string>
     <string name="vibration_long">Длинная</string>
-    <string name="vibration_call">Звонок</string>
+    <string name="vibration_call">Звонок (2 мин)</string>
     <string name="setting_always_on">Не гасить экран</string>
     <string name="setting_autostart_pomodoros">Автозапуск помидорок</string>
     <string name="setting_autostart_breaks">Автозапуск пауз</string>
