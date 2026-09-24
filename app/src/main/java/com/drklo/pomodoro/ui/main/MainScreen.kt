@@ -86,6 +86,8 @@ import kotlinx.coroutines.withTimeoutOrNull
 
 /** Hide the system bars after this much inactivity on the main screen. */
 private const val IDLE_HIDE_MS = 3_000L
+private const val FREQUENT_PROJECT_LIMIT = 5
+private const val MIN_STARTS_FOR_FREQUENT = 3
 
 @Composable
 fun MainScreen(
@@ -97,6 +99,7 @@ fun MainScreen(
     val state by viewModel.timerState.collectAsStateWithLifecycle()
     val projects by viewModel.projects.collectAsStateWithLifecycle()
     val settings by viewModel.settings.collectAsStateWithLifecycle()
+    val recentStartCounts by viewModel.recentStartCounts.collectAsStateWithLifecycle()
     val fanfareTrigger by viewModel.fanfareTrigger.collectAsStateWithLifecycle()
 
     // Roll session bullets onto the current logical day whenever the app comes to the foreground,
@@ -313,6 +316,7 @@ fun MainScreen(
         if (showProjectPicker && !isRunning) {
             ProjectPickerDialog(
                 projects = projects,
+                recentStartCounts = recentStartCounts,
                 selectedProjectId = viewedProject?.id,
                 onDismiss = { showProjectPicker = false },
                 onSelect = { index ->
@@ -371,10 +375,27 @@ private fun EmptyProjects(onOpenSettings: () -> Unit) {
 @Composable
 private fun ProjectPickerDialog(
     projects: List<Project>,
+    recentStartCounts: Map<Long, Int>,
     selectedProjectId: Long?,
     onDismiss: () -> Unit,
     onSelect: (Int) -> Unit
 ) {
+    val totalRecentStarts = recentStartCounts.values.sum()
+    val frequentProjects = if (totalRecentStarts >= MIN_STARTS_FOR_FREQUENT) {
+        projects
+            .mapIndexed { index, project ->
+                Triple(index, project, recentStartCounts[project.id] ?: 0)
+            }
+            .filter { it.third > 0 }
+            .sortedWith(
+                compareByDescending<Triple<Int, Project, Int>> { it.third }
+                    .thenBy { it.first }
+            )
+            .take(FREQUENT_PROJECT_LIMIT)
+    } else {
+        emptyList()
+    }
+
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.title_choose_project)) },
@@ -382,24 +403,47 @@ private fun ProjectPickerDialog(
             LazyColumn(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .heightIn(max = 420.dp)
+                    .heightIn(max = 480.dp)
             ) {
+                if (frequentProjects.isNotEmpty()) {
+                    item(key = "frequent_header") {
+                        Text(
+                            text = stringResource(R.string.title_frequent_projects),
+                            color = MaterialTheme.colorScheme.primary,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier.padding(start = 4.dp, top = 4.dp, bottom = 4.dp)
+                        )
+                    }
+                    itemsIndexed(
+                        items = frequentProjects,
+                        key = { _, item -> "frequent-${item.second.id}" }
+                    ) { _, item ->
+                        ProjectPickerRow(
+                            project = item.second,
+                            selected = item.second.id == selectedProjectId,
+                            onClick = { onSelect(item.first) }
+                        )
+                    }
+                    item(key = "all_header") {
+                        Text(
+                            text = stringResource(R.string.title_all_projects),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier.padding(start = 4.dp, top = 14.dp, bottom = 4.dp)
+                        )
+                    }
+                }
+
                 itemsIndexed(
                     items = projects,
-                    key = { _, project -> project.id }
+                    key = { _, project -> "all-${project.id}" }
                 ) { index, project ->
-                    Text(
-                        text = if (project.id == selectedProjectId) {
-                            "✓  ${project.name}"
-                        } else {
-                            "    ${project.name}"
-                        },
-                        color = MaterialTheme.colorScheme.onSurface,
-                        fontSize = 18.sp,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { onSelect(index) }
-                            .padding(horizontal = 4.dp, vertical = 14.dp)
+                    ProjectPickerRow(
+                        project = project,
+                        selected = project.id == selectedProjectId,
+                        onClick = { onSelect(index) }
                     )
                 }
             }
@@ -409,6 +453,23 @@ private fun ProjectPickerDialog(
                 Text(stringResource(R.string.action_cancel))
             }
         }
+    )
+}
+
+@Composable
+private fun ProjectPickerRow(
+    project: Project,
+    selected: Boolean,
+    onClick: () -> Unit
+) {
+    Text(
+        text = if (selected) "✓  ${project.name}" else "    ${project.name}",
+        color = MaterialTheme.colorScheme.onSurface,
+        fontSize = 18.sp,
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(horizontal = 4.dp, vertical = 13.dp)
     )
 }
 
