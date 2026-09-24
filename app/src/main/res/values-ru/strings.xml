@@ -88,6 +88,12 @@
 
     <string name="setting_sound">Звуки</string>
     <string name="setting_vibrate">Вибрация</string>
+    <string name="setting_vibration_pattern">Вибрация в конце этапа</string>
+    <string name="setting_vibration_pattern_summary">При ручном запуске остаётся короткий импульс. Выбранный режим срабатывает, когда заканчивается работа или пауза.</string>
+    <string name="vibration_short">Короткая</string>
+    <string name="vibration_medium">Средняя</string>
+    <string name="vibration_long">Длинная</string>
+    <string name="vibration_call">Звонок</string>
     <string name="setting_always_on">Не гасить экран</string>
     <string name="setting_autostart_pomodoros">Автозапуск помидорок</string>
     <string name="setting_autostart_breaks">Автозапуск пауз</string>
