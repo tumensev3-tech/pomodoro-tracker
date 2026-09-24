@@ -54,6 +54,7 @@ import com.drklo.pomodoro.data.backup.ProjectBackup
 import com.drklo.pomodoro.data.model.AppLanguage
 import com.drklo.pomodoro.data.model.Project
 import com.drklo.pomodoro.data.model.ThemeMode
+import com.drklo.pomodoro.data.model.VibrationPattern
 import com.drklo.pomodoro.ui.ViewModelFactories
 import com.drklo.pomodoro.ui.common.ConfirmDeleteProjectDialog
 import com.drklo.pomodoro.ui.common.SegmentedChoice
@@ -195,6 +196,25 @@ fun SettingsScreen(
                 SettingsGroup(stringResource(R.string.section_general)) {
                     SwitchRow(stringResource(R.string.setting_sound), settings.soundEnabled, viewModel::setSound)
                     SwitchRow(stringResource(R.string.setting_vibrate), settings.vibrateEnabled, viewModel::setVibrate)
+                    if (settings.vibrateEnabled) {
+                        Text(
+                            stringResource(R.string.setting_vibration_pattern),
+                            fontWeight = FontWeight.Medium,
+                            modifier = Modifier.padding(top = 4.dp, bottom = 6.dp)
+                        )
+                        SegmentedChoice(
+                            options = listOf(
+                                VibrationPattern.SHORT to stringResource(R.string.vibration_short),
+                                VibrationPattern.MEDIUM to stringResource(R.string.vibration_medium),
+                                VibrationPattern.LONG to stringResource(R.string.vibration_long),
+                                VibrationPattern.CALL to stringResource(R.string.vibration_call)
+                            ),
+                            selected = settings.vibrationPattern,
+                            onSelect = viewModel::setVibrationPattern,
+                            modifier = Modifier.padding(bottom = 4.dp)
+                        )
+                        Caption(stringResource(R.string.setting_vibration_pattern_summary))
+                    }
                     SwitchRow(
                         stringResource(R.string.setting_always_on),
                         settings.alwaysOnDisplay,
