@@ -89,6 +89,12 @@
 
     <string name="setting_sound">Sounds</string>
     <string name="setting_vibrate">Vibration</string>
+    <string name="setting_vibration_pattern">Phase-end vibration</string>
+    <string name="setting_vibration_pattern_summary">Manual start keeps the short pulse. This pattern is used when work or a break finishes.</string>
+    <string name="vibration_short">Short</string>
+    <string name="vibration_medium">Medium</string>
+    <string name="vibration_long">Long</string>
+    <string name="vibration_call">Call</string>
     <string name="setting_always_on">Keep screen on</string>
     <string name="setting_autostart_pomodoros">Autostart pomodoros</string>
     <string name="setting_autostart_breaks">Autostart breaks</string>
