@@ -1,0 +1,25 @@
+name: Custom APK PR build
+
+on:
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: gradle/actions/setup-gradle@v6
+      - name: Build custom APK
+        run: ./gradlew --no-daemon :app:assembleDebug
+      - name: Upload custom APK
+        uses: actions/upload-artifact@v7
+        with:
+          name: pomodoro-custom-v1.2-apk
+          path: app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 30
