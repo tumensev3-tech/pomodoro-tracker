@@ -133,16 +133,18 @@ class TimerEffects(context: Context) : PhaseFeedback {
             300L, 900L,
             300L, 900L
         )
-        // Repeated vibration for roughly 10 seconds, deliberately close to an incoming-call feel.
-        val CALL_PATTERN_MS = longArrayOf(
-            0L, 900L,
-            450L, 900L,
-            450L, 900L,
-            450L, 900L,
-            450L, 900L,
-            450L, 900L,
-            450L, 900L,
-            450L, 900L
-        )
+        private const val CALL_PULSE_MS = 900L
+        private const val CALL_PAUSE_MS = 450L
+        private const val CALL_CYCLES = 89
+
+        // About two minutes of incoming-call-style vibration. A manual start replaces this
+        // waveform with the normal short acknowledgement, so starting the next phase stops it.
+        val CALL_PATTERN_MS = LongArray(1 + CALL_CYCLES * 2) { index ->
+            when {
+                index == 0 -> 0L
+                index % 2 == 1 -> CALL_PULSE_MS
+                else -> CALL_PAUSE_MS
+            }
+        }
     }
 }
