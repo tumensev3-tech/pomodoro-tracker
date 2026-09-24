@@ -296,7 +296,7 @@ class TimerEngine(
         }
 
         if (settings.soundEnabled) effects.playEnd()
-        if (settings.vibrateEnabled) effects.vibrate()
+        if (settings.vibrateEnabled) effects.vibrate(settings.vibrationPattern)
         _events.tryEmit(TimerEvent.PhaseFinished(finishedPhase))
 
         val next = if (finishedPhase == Phase.POMODORO) {
