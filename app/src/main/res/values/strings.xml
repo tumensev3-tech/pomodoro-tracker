@@ -20,6 +20,8 @@
     <string name="cd_play_pause">Play or pause</string>
     <string name="cd_choose_project">Choose activity from list</string>
     <string name="title_choose_project">Choose activity</string>
+    <string name="title_frequent_projects">Frequently used · 30 days</string>
+    <string name="title_all_projects">All activities</string>
     <!-- Announced for the dial: what the timer is doing and how much of the phase is left. -->
     <string name="cd_dial_running">Running, %1$s of %2$s left</string>
     <string name="cd_dial_paused">Paused, %1$s of %2$s left</string>
