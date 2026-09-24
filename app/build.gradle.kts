@@ -75,6 +75,13 @@ android {
     }
 
     buildTypes {
+        debug {
+            // Install the personal build alongside the official v1.2 APK, whose signature belongs
+            // to the original author. This keeps the original app available while the custom build
+            // is tested and lets projects/history be moved with the built-in export/import.
+            applicationIdSuffix = ".custom"
+            versionNameSuffix = "-custom"
+        }
         release {
             // Without R8 the APK was 41.7 MB, of which 42 MB was dex: material-icons-extended
             // compiles thousands of icons and the app draws eleven of them. Shrinking is what makes
