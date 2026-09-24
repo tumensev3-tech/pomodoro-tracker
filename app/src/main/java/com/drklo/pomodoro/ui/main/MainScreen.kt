@@ -618,7 +618,7 @@ private fun ProjectDetails(
     )
     Spacer(Modifier.height(if (compact) 8.dp else 12.dp))
     Text(
-        text = project.name,
+        text = if (onChooseProject != null) "${project.name} ▾" else project.name,
         fontSize = if (compact) 18.sp else 22.sp,
         fontWeight = FontWeight.Medium,
         color = color,
