@@ -18,6 +18,8 @@
     <string name="action_reset">Reset</string>
     <string name="cd_settings">Settings</string>
     <string name="cd_play_pause">Play or pause</string>
+    <string name="cd_choose_project">Choose activity from list</string>
+    <string name="title_choose_project">Choose activity</string>
     <!-- Announced for the dial: what the timer is doing and how much of the phase is left. -->
     <string name="cd_dial_running">Running, %1$s of %2$s left</string>
     <string name="cd_dial_paused">Paused, %1$s of %2$s left</string>
