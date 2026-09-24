@@ -29,6 +29,7 @@ object ViewModelFactories {
                 app = app,
                 engine = app.container.timerEngine,
                 projectStore = app.container.projectRepository,
+                usageRepository = app.container.projectUsageRepository,
                 settingsSource = app.container.settingsRepository
             )
         }
