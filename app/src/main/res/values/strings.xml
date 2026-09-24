@@ -94,7 +94,7 @@
     <string name="vibration_short">Short</string>
     <string name="vibration_medium">Medium</string>
     <string name="vibration_long">Long</string>
-    <string name="vibration_call">Call</string>
+    <string name="vibration_call">Call (2 min)</string>
     <string name="setting_always_on">Keep screen on</string>
     <string name="setting_autostart_pomodoros">Autostart pomodoros</string>
     <string name="setting_autostart_breaks">Autostart breaks</string>
