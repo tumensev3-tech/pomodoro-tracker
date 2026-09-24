@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
@@ -18,6 +19,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
@@ -25,10 +28,12 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -196,6 +201,7 @@ fun MainScreen(
     val viewedProject = projects.getOrNull(pagerState.currentPage % projects.size)
     val showBookmark = pausedProject != null && viewedProject?.id != pausedProject.id
     var shakeTrigger by remember { androidx.compose.runtime.mutableIntStateOf(0) }
+    var showProjectPicker by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
     BoxWithConstraints(
@@ -239,7 +245,8 @@ fun MainScreen(
                     },
                     onReset = { if (isActive) viewModel.onReset() },
                     onSeek = { if (isActive) viewModel.onSeek(it) },
-                    onChangePhase = { if (isActive) viewModel.onChangePhase() }
+                    onChangePhase = { if (isActive) viewModel.onChangePhase() },
+                    onChooseProject = { if (!isRunning) showProjectPicker = true }
                 )
             )
         }
@@ -302,6 +309,20 @@ fun MainScreen(
             onShown = viewModel::onFanfareShown,
             modifier = Modifier.fillMaxSize()
         )
+
+        if (showProjectPicker && !isRunning) {
+            ProjectPickerDialog(
+                projects = projects,
+                selectedProjectId = viewedProject?.id,
+                onDismiss = { showProjectPicker = false },
+                onSelect = { index ->
+                    showProjectPicker = false
+                    val base = pagerState.currentPage -
+                        (pagerState.currentPage % projects.size)
+                    scope.launch { pagerState.scrollToPage(base + index) }
+                }
+            )
+        }
     }
 }
 
@@ -311,7 +332,8 @@ internal data class PageActions(
     val onTap: () -> Unit,
     val onReset: () -> Unit,
     val onSeek: (Float) -> Unit,
-    val onChangePhase: () -> Unit
+    val onChangePhase: () -> Unit,
+    val onChooseProject: () -> Unit
 )
 
 /** Placeholder shown while there is no project to draw — never a blank, uncontrollable screen. */
@@ -347,6 +369,50 @@ private fun EmptyProjects(onOpenSettings: () -> Unit) {
 }
 
 @Composable
+private fun ProjectPickerDialog(
+    projects: List<Project>,
+    selectedProjectId: Long?,
+    onDismiss: () -> Unit,
+    onSelect: (Int) -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.title_choose_project)) },
+        text = {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 420.dp)
+            ) {
+                itemsIndexed(
+                    items = projects,
+                    key = { _, project -> project.id }
+                ) { index, project ->
+                    Text(
+                        text = if (project.id == selectedProjectId) {
+                            "✓  ${project.name}"
+                        } else {
+                            "    ${project.name}"
+                        },
+                        color = MaterialTheme.colorScheme.onSurface,
+                        fontSize = 18.sp,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onSelect(index) }
+                            .padding(horizontal = 4.dp, vertical = 14.dp)
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.action_cancel))
+            }
+        }
+    )
+}
+
+@Composable
 internal fun ProjectPage(
     project: Project,
     /**
@@ -363,6 +429,7 @@ internal fun ProjectPage(
     val onReset = actions.onReset
     val onSeek = actions.onSeek
     val onChangePhase = actions.onChangePhase
+    val onChooseProject = actions.onChooseProject
     // The page reflects live state only for the active project; others show an idle preview.
     val isActive = state != null
     val phase = state?.phase ?: Phase.POMODORO
@@ -455,7 +522,8 @@ internal fun ProjectPage(
             color = fg,
             compact = compact,
             onChangePhase = onChangePhase.takeIf { canChangePhase },
-            changePhaseLabel = changePhaseLabel
+            changePhaseLabel = changePhaseLabel,
+            onChooseProject = onChooseProject.takeIf { status != TimerStatus.RUNNING }
         )
     }
 
@@ -530,7 +598,8 @@ private fun ProjectDetails(
     compact: Boolean,
     /** Null when the phase cannot be changed right now — while running (F-021). */
     onChangePhase: (() -> Unit)?,
-    changePhaseLabel: String
+    changePhaseLabel: String,
+    onChooseProject: (() -> Unit)?
 ) {
     // A row of circles says nothing out loud. Merged into one node so a screen reader announces the
     // progress once instead of walking eight unlabelled dots.
@@ -552,7 +621,14 @@ private fun ProjectDetails(
         text = project.name,
         fontSize = if (compact) 18.sp else 22.sp,
         fontWeight = FontWeight.Medium,
-        color = color
+        color = color,
+        modifier = if (onChooseProject != null) {
+            Modifier.clickable(onClickLabel = stringResource(R.string.cd_choose_project)) {
+                onChooseProject()
+            }
+        } else {
+            Modifier
+        }
     )
     Spacer(Modifier.height(if (compact) 4.dp else 6.dp))
     // Phase type — always visible so the user knows pomodoro vs break (#7); tap to change (F-021).
@@ -605,7 +681,13 @@ private fun ProjectPageLandscapePreview() {
             state = null,
             isLandscape = true,
             holdFinishedColor = false,
-            actions = PageActions(onTap = {}, onReset = {}, onSeek = {}, onChangePhase = {})
+            actions = PageActions(
+                onTap = {},
+                onReset = {},
+                onSeek = {},
+                onChangePhase = {},
+                onChooseProject = {}
+            )
         )
     }
 }
