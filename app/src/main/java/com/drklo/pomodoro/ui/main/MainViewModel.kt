@@ -8,6 +8,7 @@ import com.drklo.pomodoro.data.model.Phase
 import com.drklo.pomodoro.data.model.Project
 import com.drklo.pomodoro.data.model.TimerStatus
 import com.drklo.pomodoro.data.repository.ProjectStore
+import com.drklo.pomodoro.data.repository.ProjectUsageRepository
 import com.drklo.pomodoro.timer.SettingsSource
 import com.drklo.pomodoro.timer.TimerEngine
 import com.drklo.pomodoro.timer.TimerEvent
@@ -24,6 +25,7 @@ class MainViewModel(
     app: Application,
     private val engine: TimerEngine,
     projectStore: ProjectStore,
+    private val usageRepository: ProjectUsageRepository,
     settingsSource: SettingsSource
 ) : AndroidViewModel(app) {
 
@@ -34,6 +36,9 @@ class MainViewModel(
 
     val settings: StateFlow<GlobalSettings> = settingsSource.settings
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), GlobalSettings())
+
+    val recentStartCounts: StateFlow<Map<Long, Int>> = usageRepository.recentStartCounts
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
 
     /**
      * Incremented each time the daily goal is reached, and cleared once the celebration has played
@@ -94,6 +99,9 @@ class MainViewModel(
         val wasIdle = engine.state.value.status == TimerStatus.IDLE
         engine.togglePlayPause()
         if (wasIdle && engine.state.value.status == TimerStatus.RUNNING) {
+            engine.state.value.project?.id?.let { projectId ->
+                launchSafely { usageRepository.recordManualStart(projectId) }
+            }
             TimerService.start(getApplication())
         }
     }
