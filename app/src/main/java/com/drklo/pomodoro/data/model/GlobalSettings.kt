@@ -1,5 +1,17 @@
 package com.drklo.pomodoro.data.model
 
+enum class VibrationPattern {
+    SHORT,
+    MEDIUM,
+    LONG,
+    CALL;
+
+    companion object {
+        fun fromName(value: String?): VibrationPattern =
+            entries.firstOrNull { it.name == value } ?: CALL
+    }
+}
+
 /**
  * App-wide settings (PRD US-005, "Глобально"): sounds, vibration, always-on, idle alert,
  * autostart, end-of-day time and UI language.
@@ -7,6 +19,7 @@ package com.drklo.pomodoro.data.model
 data class GlobalSettings(
     val soundEnabled: Boolean = true,
     val vibrateEnabled: Boolean = true,
+    val vibrationPattern: VibrationPattern = VibrationPattern.CALL,
     val alwaysOnDisplay: Boolean = false,
     /** Auto-start the next pomodoro after a break ends (F-015). */
     val autostartPomodoros: Boolean = false,
