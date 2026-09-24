@@ -5,6 +5,7 @@ import androidx.room.Room
 import com.drklo.pomodoro.data.db.AppDatabase
 import com.drklo.pomodoro.data.repository.BackupRepository
 import com.drklo.pomodoro.data.repository.ProjectRepository
+import com.drklo.pomodoro.data.repository.ProjectUsageRepository
 import com.drklo.pomodoro.data.repository.SettingsRepository
 import com.drklo.pomodoro.data.repository.StatsRepository
 import com.drklo.pomodoro.timer.SystemTimeSource
@@ -24,6 +25,9 @@ class AppContainer(context: Context) {
     ).addMigrations(AppDatabase.MIGRATION_1_2, AppDatabase.MIGRATION_2_3).build()
 
     val projectRepository: ProjectRepository by lazy { ProjectRepository(database) }
+    val projectUsageRepository: ProjectUsageRepository by lazy {
+        ProjectUsageRepository(context.applicationContext)
+    }
     val statsRepository: StatsRepository by lazy { StatsRepository(database) }
     val backupRepository: BackupRepository by lazy { BackupRepository(database) }
     val settingsRepository: SettingsRepository by lazy { SettingsRepository(context.applicationContext) }
