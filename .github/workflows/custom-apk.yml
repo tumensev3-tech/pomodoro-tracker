@@ -27,6 +27,9 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v6
 
+      - name: Restore stable Custom signing key
+        run: base64 --decode .github/pomodoro-custom-debug.b64 > pomodoro-custom-debug.jks
+
       - name: Build APK
         run: ./gradlew --no-daemon :app:assembleDebug
 
