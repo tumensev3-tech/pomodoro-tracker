@@ -4,37 +4,41 @@ import androidx.annotation.StringRes
 import com.drklo.pomodoro.R
 import com.drklo.pomodoro.data.model.ProjectIcon
 
-fun ProjectIcon.symbol(): String = when (this) {
-    ProjectIcon.NONE -> "—"
-    ProjectIcon.COMPUTER -> "💻"
-    ProjectIcon.BOOK -> "📚"
-    ProjectIcon.STUDY -> "🎓"
-    ProjectIcon.COOKING -> "🍳"
-    ProjectIcon.HOME -> "🏠"
-    ProjectIcon.CAR -> "🚗"
-    ProjectIcon.TOOLS -> "🔧"
-    ProjectIcon.FITNESS -> "🏃"
-    ProjectIcon.WALK -> "🚶"
-    ProjectIcon.MUSIC -> "🎵"
-    ProjectIcon.SHOPPING -> "🛒"
-    ProjectIcon.COFFEE -> "☕"
-    ProjectIcon.CREATIVE -> "🎨"
-}
+private val SYMBOLS = mapOf(
+    ProjectIcon.NONE to "—",
+    ProjectIcon.COMPUTER to "💻",
+    ProjectIcon.BOOK to "📚",
+    ProjectIcon.STUDY to "🎓",
+    ProjectIcon.COOKING to "🍳",
+    ProjectIcon.HOME to "🏠",
+    ProjectIcon.CAR to "🚗",
+    ProjectIcon.TOOLS to "🔧",
+    ProjectIcon.FITNESS to "🏃",
+    ProjectIcon.WALK to "🚶",
+    ProjectIcon.MUSIC to "🎵",
+    ProjectIcon.SHOPPING to "🛒",
+    ProjectIcon.COFFEE to "☕",
+    ProjectIcon.CREATIVE to "🎨"
+)
+
+private val LABELS = mapOf(
+    ProjectIcon.NONE to R.string.project_icon_none,
+    ProjectIcon.COMPUTER to R.string.project_icon_computer,
+    ProjectIcon.BOOK to R.string.project_icon_book,
+    ProjectIcon.STUDY to R.string.project_icon_study,
+    ProjectIcon.COOKING to R.string.project_icon_cooking,
+    ProjectIcon.HOME to R.string.project_icon_home,
+    ProjectIcon.CAR to R.string.project_icon_car,
+    ProjectIcon.TOOLS to R.string.project_icon_tools,
+    ProjectIcon.FITNESS to R.string.project_icon_fitness,
+    ProjectIcon.WALK to R.string.project_icon_walk,
+    ProjectIcon.MUSIC to R.string.project_icon_music,
+    ProjectIcon.SHOPPING to R.string.project_icon_shopping,
+    ProjectIcon.COFFEE to R.string.project_icon_coffee,
+    ProjectIcon.CREATIVE to R.string.project_icon_creative
+)
+
+fun ProjectIcon.symbol(): String = SYMBOLS.getValue(this)
 
 @StringRes
-fun ProjectIcon.labelRes(): Int = when (this) {
-    ProjectIcon.NONE -> R.string.project_icon_none
-    ProjectIcon.COMPUTER -> R.string.project_icon_computer
-    ProjectIcon.BOOK -> R.string.project_icon_book
-    ProjectIcon.STUDY -> R.string.project_icon_study
-    ProjectIcon.COOKING -> R.string.project_icon_cooking
-    ProjectIcon.HOME -> R.string.project_icon_home
-    ProjectIcon.CAR -> R.string.project_icon_car
-    ProjectIcon.TOOLS -> R.string.project_icon_tools
-    ProjectIcon.FITNESS -> R.string.project_icon_fitness
-    ProjectIcon.WALK -> R.string.project_icon_walk
-    ProjectIcon.MUSIC -> R.string.project_icon_music
-    ProjectIcon.SHOPPING -> R.string.project_icon_shopping
-    ProjectIcon.COFFEE -> R.string.project_icon_coffee
-    ProjectIcon.CREATIVE -> R.string.project_icon_creative
-}
+fun ProjectIcon.labelRes(): Int = LABELS.getValue(this)
