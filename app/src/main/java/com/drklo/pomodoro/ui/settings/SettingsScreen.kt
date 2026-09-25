@@ -53,6 +53,7 @@ import com.drklo.pomodoro.R
 import com.drklo.pomodoro.data.backup.ProjectBackup
 import com.drklo.pomodoro.data.model.AppLanguage
 import com.drklo.pomodoro.data.model.Project
+import com.drklo.pomodoro.data.model.ProjectIcon
 import com.drklo.pomodoro.data.model.ThemeMode
 import com.drklo.pomodoro.data.model.VibrationPattern
 import com.drklo.pomodoro.ui.ViewModelFactories
@@ -60,6 +61,7 @@ import com.drklo.pomodoro.ui.common.ConfirmDeleteProjectDialog
 import com.drklo.pomodoro.ui.common.SegmentedChoice
 import com.drklo.pomodoro.ui.common.Stepper
 import com.drklo.pomodoro.ui.common.TimeOfDayField
+import com.drklo.pomodoro.ui.common.symbol
 import com.drklo.pomodoro.util.BatteryOptimization
 import com.drklo.pomodoro.util.findActivity
 import java.time.LocalDate
@@ -426,11 +428,19 @@ private fun ProjectRow(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Box(
+            contentAlignment = Alignment.Center,
             modifier = Modifier
-                .size(22.dp)
+                .size(34.dp)
                 .clip(CircleShape)
                 .background(Color(project.pomodoroColor))
-        )
+        ) {
+            if (project.icon != ProjectIcon.NONE) {
+                Text(
+                    text = project.icon.symbol(),
+                    style = MaterialTheme.typography.titleMedium
+                )
+            }
+        }
         Column(modifier = Modifier.weight(1f).padding(start = 14.dp)) {
             Text(project.name, fontWeight = FontWeight.Medium)
             Text(
