@@ -68,6 +68,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.drklo.pomodoro.R
 import com.drklo.pomodoro.data.model.Phase
 import com.drklo.pomodoro.data.model.Project
+import com.drklo.pomodoro.data.model.ProjectIcon
 import com.drklo.pomodoro.data.model.TimerStatus
 import com.drklo.pomodoro.timer.TimerState
 import com.drklo.pomodoro.timer.formatMmSs
@@ -76,6 +77,7 @@ import com.drklo.pomodoro.ui.main.components.Fanfare
 import com.drklo.pomodoro.ui.main.components.PausedBookmark
 import com.drklo.pomodoro.ui.main.components.SessionBullets
 import com.drklo.pomodoro.ui.main.components.TimerDial
+import com.drklo.pomodoro.ui.common.symbol
 import com.drklo.pomodoro.ui.theme.DefaultPomodoroColor
 import com.drklo.pomodoro.ui.theme.PomodoroTheme
 import com.drklo.pomodoro.util.findActivity
@@ -406,7 +408,12 @@ private fun PhaseEndDecisionDialog(
         if (finishedWork) R.string.phase_end_start_break else R.string.phase_end_return_to_work
     )
     val activityName = state.project?.name.orEmpty()
-    val phaseEmoji = if (finishedWork) "💼" else "☕"
+    val activityIcon = state.project?.icon
+    val phaseEmoji = when {
+        finishedWork && activityIcon != null && activityIcon != ProjectIcon.NONE -> activityIcon.symbol()
+        finishedWork -> "💼"
+        else -> "☕"
+    }
 
     AlertDialog(
         onDismissRequest = { /* A phase-end decision is required. */ },
@@ -595,15 +602,32 @@ private fun ProjectPickerRow(
     selected: Boolean,
     onClick: () -> Unit
 ) {
-    Text(
-        text = if (selected) "✓  ${project.name}" else "    ${project.name}",
-        color = MaterialTheme.colorScheme.onSurface,
-        fontSize = 18.sp,
+    Row(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
-            .padding(horizontal = 4.dp, vertical = 13.dp)
-    )
+            .padding(horizontal = 4.dp, vertical = 13.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = if (selected) "✓" else " ",
+            color = MaterialTheme.colorScheme.primary,
+            fontSize = 18.sp
+        )
+        if (project.icon != ProjectIcon.NONE) {
+            Text(
+                text = project.icon.symbol(),
+                fontSize = 22.sp,
+                modifier = Modifier.padding(start = 10.dp)
+            )
+        }
+        Text(
+            text = project.name,
+            color = MaterialTheme.colorScheme.onSurface,
+            fontSize = 18.sp,
+            modifier = Modifier.padding(start = 10.dp)
+        )
+    }
 }
 
 @Composable
@@ -811,11 +835,8 @@ private fun ProjectDetails(
         }
     )
     Spacer(Modifier.height(if (compact) 8.dp else 12.dp))
-    Text(
-        text = if (onChooseProject != null) "${project.name} ▾" else project.name,
-        fontSize = if (compact) 18.sp else 22.sp,
-        fontWeight = FontWeight.Medium,
-        color = color,
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
         modifier = if (onChooseProject != null) {
             Modifier.clickable(onClickLabel = stringResource(R.string.cd_choose_project)) {
                 onChooseProject()
@@ -823,7 +844,21 @@ private fun ProjectDetails(
         } else {
             Modifier
         }
-    )
+    ) {
+        if (project.icon != ProjectIcon.NONE) {
+            Text(
+                text = project.icon.symbol(),
+                fontSize = if (compact) 20.sp else 26.sp
+            )
+            Spacer(Modifier.padding(horizontal = 3.dp))
+        }
+        Text(
+            text = if (onChooseProject != null) "${project.name} ▾" else project.name,
+            fontSize = if (compact) 18.sp else 22.sp,
+            fontWeight = FontWeight.Medium,
+            color = color
+        )
+    }
     Spacer(Modifier.height(if (compact) 4.dp else 6.dp))
     // Phase type — always visible so the user knows pomodoro vs break (#7); tap to change (F-021).
     Text(
