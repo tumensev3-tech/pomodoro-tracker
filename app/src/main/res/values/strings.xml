@@ -119,7 +119,7 @@
     <string name="vibration_short">Short</string>
     <string name="vibration_medium">Medium</string>
     <string name="vibration_long">Long</string>
-    <string name="vibration_call">Call (2 min)</string>
+    <string name="vibration_call">Rapid pulses (2 min)</string>
     <string name="setting_always_on">Keep screen on</string>
     <string name="setting_idle_alert">Idle alert</string>
     <string name="setting_idle_alert_summary">Flip screen colors every N min while idle (screen-on only)</string>
