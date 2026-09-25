@@ -24,6 +24,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 
+@Suppress("TooManyFunctions")
 class MainViewModel(
     app: Application,
     private val engine: TimerEngine,
