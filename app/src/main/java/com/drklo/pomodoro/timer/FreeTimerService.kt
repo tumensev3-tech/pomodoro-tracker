@@ -120,6 +120,9 @@ class FreeTimerService : Service() {
         notificationManager().createNotificationChannel(channel)
     }
 
+    private fun notificationManager(): NotificationManager =
+        getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
     companion object {
         private const val CHANNEL_ID = "free_timer_channel"
         private const val NOTIFICATION_ID = 1101
