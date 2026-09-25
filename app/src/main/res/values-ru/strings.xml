@@ -12,6 +12,16 @@
     <string name="notif_pause">Пауза</string>
     <string name="notif_resume">Продолжить</string>
     <string name="notif_reset">Сброс</string>
+    <string name="phase_alert_channel_name">Окончание этапа</string>
+    <string name="phase_alert_channel_desc">Заметное уведомление, когда заканчивается работа или перерыв</string>
+    <string name="phase_end_work_title">Работа закончена</string>
+    <string name="phase_end_break_title">Перерыв закончен</string>
+    <string name="phase_end_start_break">Начать перерыв</string>
+    <string name="phase_end_return_to_work">Вернуться к работе</string>
+    <string name="phase_end_question">Перейти к следующему этапу или продлить текущий?</string>
+    <string name="notif_extend_5">+5 мин</string>
+    <string name="notif_extend_10">+10 мин</string>
+    <string name="notif_extend_15">+15 мин</string>
 
     <!-- Main screen -->
     <string name="minutes_short">МИН</string>
