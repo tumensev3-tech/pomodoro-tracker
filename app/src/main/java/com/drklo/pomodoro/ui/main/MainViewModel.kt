@@ -110,6 +110,16 @@ class MainViewModel(
         engine.reset()
     }
 
+    fun onAcceptPhaseEnd() {
+        engine.acceptPhaseEnd()
+        TimerService.start(getApplication())
+    }
+
+    fun onExtendPhase(minutes: Int) {
+        engine.extendCurrentPhase(minutes)
+        TimerService.start(getApplication())
+    }
+
     /** Scrubs the active interval's remaining time to [fraction] of its total (dial drag). */
     fun onSeek(fraction: Float) {
         engine.seek(fraction)
