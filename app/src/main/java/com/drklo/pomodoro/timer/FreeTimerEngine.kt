@@ -4,7 +4,7 @@ import android.util.Log
 import com.drklo.pomodoro.data.LogicalDay
 import com.drklo.pomodoro.data.model.GlobalSettings
 import com.drklo.pomodoro.data.repository.ActivitySessionKind
-import com.drklo.pomodoro.data.repository.ActivitySessionRepository
+import com.drklo.pomodoro.data.repository.ActivitySessionStore
 import com.drklo.pomodoro.util.loggingExceptionHandler
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -23,7 +23,7 @@ import kotlin.math.ceil
  */
 class FreeTimerEngine(
     settingsSource: SettingsSource,
-    private val sessions: ActivitySessionRepository,
+    private val sessions: ActivitySessionStore,
     private val time: TimeSource,
     private val scope: CoroutineScope =
         CoroutineScope(SupervisorJob() + Dispatchers.Default + loggingExceptionHandler(TAG))
