@@ -220,22 +220,6 @@ fun SettingsScreen(
                         settings.alwaysOnDisplay,
                         viewModel::setAlwaysOn
                     )
-                    SwitchRow(
-                        stringResource(R.string.setting_autostart_pomodoros),
-                        settings.autostartPomodoros,
-                        viewModel::setAutostartPomodoros
-                    )
-                    SwitchRow(
-                        stringResource(R.string.setting_autostart_breaks),
-                        settings.autostartBreaks,
-                        viewModel::setAutostartBreaks
-                    )
-                    SwitchRow(
-                        stringResource(R.string.setting_hold_finished_color),
-                        settings.holdFinishedPhaseColor,
-                        viewModel::setHoldFinishedPhaseColor
-                    )
-                    Caption(stringResource(R.string.setting_hold_finished_color_summary))
                     RowDivider()
                     // Resolved here rather than inside valueText: that lambda is not composable, so
                     // reading resources through the context there is invisible to recomposition and
