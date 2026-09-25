@@ -110,6 +110,10 @@ class TimerEffects(context: Context) : PhaseFeedback {
 
     fun vibrate(durationMs: Long) = vibrate(oneShot(durationMs))
 
+    override fun cancelVibration() {
+        vibrator?.cancel()
+    }
+
     private fun oneShot(durationMs: Long): VibrationEffect =
         VibrationEffect.createOneShot(durationMs, VibrationEffect.DEFAULT_AMPLITUDE)
 
