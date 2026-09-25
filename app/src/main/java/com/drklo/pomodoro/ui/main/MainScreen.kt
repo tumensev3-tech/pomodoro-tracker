@@ -89,6 +89,7 @@ import kotlinx.coroutines.withTimeoutOrNull
 private const val IDLE_HIDE_MS = 3_000L
 private const val FREQUENT_PROJECT_LIMIT = 5
 private const val MIN_STARTS_FOR_FREQUENT = 3
+private val PHASE_EXTENSION_MINUTES = listOf(5, 10, 15)
 
 @Composable
 fun MainScreen(
@@ -395,7 +396,7 @@ private fun PhaseEndDecisionDialog(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
-                    listOf(5, 10, 15).forEach { minutes ->
+                    PHASE_EXTENSION_MINUTES.forEach { minutes ->
                         TextButton(onClick = { onExtend(minutes) }) {
                             Text("+$minutes " + stringResource(R.string.minutes_unit))
                         }
