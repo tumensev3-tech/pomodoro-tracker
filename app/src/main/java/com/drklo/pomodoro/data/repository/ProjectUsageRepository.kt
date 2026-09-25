@@ -47,10 +47,10 @@ class ProjectUsageRepository(private val context: Context) {
 
     private fun decode(raw: String): StartEntry? {
         val separator = raw.indexOf(':')
-        if (separator <= 0 || separator == raw.lastIndex) return null
-        val timestamp = raw.substring(0, separator).toLongOrNull() ?: return null
-        val projectId = raw.substring(separator + 1).toLongOrNull() ?: return null
-        return StartEntry(timestamp, projectId)
+        val validSeparator = separator > 0 && separator < raw.lastIndex
+        val timestamp = if (validSeparator) raw.substring(0, separator).toLongOrNull() else null
+        val projectId = if (validSeparator) raw.substring(separator + 1).toLongOrNull() else null
+        return if (timestamp != null && projectId != null) StartEntry(timestamp, projectId) else null
     }
 
     private fun encode(timestampMs: Long, projectId: Long): String = "$timestampMs:$projectId"
