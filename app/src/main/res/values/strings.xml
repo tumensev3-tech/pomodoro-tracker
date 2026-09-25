@@ -110,12 +110,8 @@
     <string name="vibration_long">Long</string>
     <string name="vibration_call">Call (2 min)</string>
     <string name="setting_always_on">Keep screen on</string>
-    <string name="setting_autostart_pomodoros">Autostart pomodoros</string>
-    <string name="setting_autostart_breaks">Autostart breaks</string>
     <string name="setting_idle_alert">Idle alert</string>
     <string name="setting_idle_alert_summary">Flip screen colors every N min while idle (screen-on only)</string>
-    <string name="setting_hold_finished_color">Hold finished phase color</string>
-    <string name="setting_hold_finished_color_summary">While waiting to start the next phase, keep the color of the phase that just ended</string>
     <string name="setting_day_end">End of day</string>
     <string name="setting_day_end_summary">When a new day starts for goals</string>
     <string name="section_background">Background reliability</string>
