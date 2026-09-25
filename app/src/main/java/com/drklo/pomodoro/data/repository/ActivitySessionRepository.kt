@@ -14,6 +14,7 @@ enum class ActivitySessionKind {
 }
 
 interface ActivitySessionStore {
+    @Suppress("LongParameterList")
     suspend fun record(
         name: String,
         kind: ActivitySessionKind,
@@ -29,6 +30,7 @@ class ActivitySessionRepository(db: AppDatabase) : ActivitySessionStore {
 
     private val dao: ActivitySessionDao = db.activitySessionDao()
 
+    @Suppress("LongParameterList")
     override suspend fun record(
         name: String,
         kind: ActivitySessionKind,
