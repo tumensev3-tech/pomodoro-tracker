@@ -43,6 +43,7 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.drklo.pomodoro.R
@@ -285,7 +286,7 @@ private fun ProjectIconRow(selected: ProjectIcon, onPick: (ProjectIcon) -> Unit)
             ) {
                 Text(
                     text = icon.symbol(),
-                    fontSize = androidx.compose.ui.unit.sp(24)
+                    fontSize = 24.sp
                 )
             }
         }
