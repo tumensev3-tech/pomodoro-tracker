@@ -120,12 +120,13 @@ class TimerEngine(
     fun refreshActiveProject(updated: Project): Unit = synchronized(lock) {
         val s = _state.value
         if (s.project?.id != updated.id) return
+        if (s.awaitingDecision) {
+            _state.value = s.copy(project = updated)
+            return@synchronized
+        }
         _state.value = when (s.status) {
             TimerStatus.RUNNING, TimerStatus.PAUSED -> s.copy(project = updated)
             TimerStatus.IDLE -> {
-                if (s.awaitingDecision) return@synchronized run {
-                    _state.value = s.copy(project = updated)
-                }
                 val total = updated.durationSecondsFor(s.phase)
                 // Room re-emits the whole project list whenever any row changes, so editing a
                 // *different* project used to silently undo a scrub here. Only a duration that
@@ -293,59 +294,106 @@ class TimerEngine(
         startTicking()
     }
 
-    private fun completePhase() {
+    /**
+     * Zero is no longer an automatic transition. The finished phase stays selected until the user
+     * explicitly accepts it or extends the same phase by 5/10/15 minutes.
+     */
+    private fun signalPhaseEnd() {
         val finished = _state.value
         val project = finished.project ?: return
-        val finishedPhase = finished.phase
 
-        // Read the clock once: the database row and the in-memory counters must not end up
-        // disagreeing about which logical day this phase belongs to.
-        val dayKey = currentDayKey()
-        // A phase that started before the end-of-day boundary and ended after it belongs to the new
-        // day (F-022). Without carrying the counters over, the row lands on the new day while
-        // "today" and the session bullets keep growing yesterday's tally — the main screen and the
-        // reports then disagree for the rest of the night, and the daily goal never fires again.
+        pendingEndDayKey = currentDayKey()
+        pendingEndWallClockMs = time.wallClockMs()
+
+        _state.value = finished.copy(
+            status = TimerStatus.IDLE,
+            remainingSeconds = 0,
+            awaitingNext = false,
+            awaitingDecision = true,
+            idleAlertActive = false
+        )
+
+        if (settings.soundEnabled) effects.playEnd()
+        if (settings.vibrateEnabled) effects.vibrate(settings.vibrationPattern)
+        _events.tryEmit(TimerEvent.PhaseFinished(finished.phase))
+        startIdleAlert()
+    }
+
+    /** Accept the finished phase and immediately start the next work/break phase. */
+    fun acceptPhaseEnd(): Unit = synchronized(lock) {
+        val finished = _state.value
+        if (!finished.awaitingDecision) return
+        val project = finished.project ?: return
+
+        effects.cancelVibration()
+        stopIdleAlert()
+
+        val dayKey = pendingEndDayKey ?: currentDayKey()
+        val endEpochMs = pendingEndWallClockMs ?: time.wallClockMs()
+        clearPendingPhaseEnd()
+
         val rolledOverToNewDay = sessionDayKey != null && sessionDayKey != dayKey
         sessionDayKey = dayKey
-        val s = if (rolledOverToNewDay) {
+        val normalized = if (rolledOverToNewDay) {
             finished.copy(completedToday = 0, completedInSession = 0, pomodorosSinceLongBreak = 0)
         } else {
             finished
         }
 
-        if (settings.soundEnabled) effects.playEnd()
-        if (settings.vibrateEnabled) effects.vibrate(settings.vibrationPattern)
-        _events.tryEmit(TimerEvent.PhaseFinished(finishedPhase))
-
-        val next = if (finishedPhase == Phase.POMODORO) {
-            afterPomodoro(s, project, dayKey)
+        val next = if (finished.phase == Phase.POMODORO) {
+            afterPomodoro(normalized, project, dayKey, endEpochMs)
         } else {
             val total = project.durationSecondsFor(Phase.POMODORO)
-            s.copy(
+            normalized.copy(
                 status = TimerStatus.IDLE,
                 phase = Phase.POMODORO,
                 totalSeconds = total,
                 remainingSeconds = total,
-                awaitingNext = true,
+                awaitingNext = false,
+                awaitingDecision = false,
                 idleAlertActive = false
             )
         }
 
-        val autostart = if (next.phase.isBreak) settings.autostartBreaks else settings.autostartPomodoros
-        if (autostart) {
-            // Publish "the next phase is already running" as one frame. An intermediate IDLE would
-            // tell the foreground service the timer had stopped — and it stops itself on IDLE,
-            // leaving the autostarted phase to run unprotected in the background.
-            _state.value = runningFrom(next, userInitiated = false)
-            startTicking()
-        } else {
-            _state.value = next
-            startIdleAlert()
-        }
+        _state.value = runningFrom(next, userInitiated = false)
+        startTicking()
     }
 
-    private fun afterPomodoro(s: TimerState, project: Project, dayKey: String): TimerState {
-        persistCompletedPomodoro(project, dayKey, durationSeconds = s.totalSeconds)
+    /** Continue the phase that just ended, preserving its accumulated duration for statistics. */
+    fun extendCurrentPhase(minutes: Int): Unit = synchronized(lock) {
+        if (minutes <= 0) return
+        val s = _state.value
+        if (!s.awaitingDecision || s.project == null) return
+
+        effects.cancelVibration()
+        stopIdleAlert()
+        clearPendingPhaseEnd()
+
+        val extraSeconds = minutes * SECONDS_PER_MINUTE
+        val extended = s.copy(
+            status = TimerStatus.IDLE,
+            totalSeconds = s.totalSeconds + extraSeconds,
+            remainingSeconds = extraSeconds,
+            awaitingNext = false,
+            awaitingDecision = false,
+            idleAlertActive = false
+        )
+        _state.value = runningFrom(extended, userInitiated = false)
+        startTicking()
+    }
+
+    private fun afterPomodoro(
+        s: TimerState,
+        project: Project,
+        dayKey: String,
+        endEpochMs: Long
+    ): TimerState {
+        persistCompletedPomodoro(
+            project,
+            dayKey,
+            durationSeconds = s.totalSeconds,
+            endEpochMs = endEpochMs
+        )
         val newToday = s.completedToday + 1
         val perSession = project.pomodorosPerSession.coerceAtLeast(1)
         val newSession = (s.completedInSession % perSession) + 1
@@ -366,7 +414,8 @@ class TimerEngine(
             completedInSession = newSession,
             completedToday = newToday,
             pomodorosSinceLongBreak = if (takeLong) 0 else sinceLong,
-            awaitingNext = true,
+            awaitingNext = false,
+            awaitingDecision = false,
             idleAlertActive = false
         )
     }
@@ -391,7 +440,7 @@ class TimerEngine(
         val remaining = remainingFromDeadline()
         val expired = remaining <= 0
         if (expired) {
-            completePhase()
+            signalPhaseEnd()
         } else {
             _state.value = _state.value.copy(remainingSeconds = remaining)
         }
@@ -401,7 +450,7 @@ class TimerEngine(
     /**
      * Invalidates the interval being counted down and returns the new generation. Nothing cancels
      * the tick coroutine: the loop checks its own generation and steps out. That matters because
-     * [completePhase] runs *inside* that loop — cancelling from there used to mean the method was
+     * [signalPhaseEnd] runs *inside* that loop — cancelling from there used to mean the method was
      * finishing a transition inside a coroutine it had already cancelled, which worked only as long
      * as nobody added a suspension point to it.
      */
@@ -415,7 +464,8 @@ class TimerEngine(
     /** The timer is stalled when paused or between phases awaiting the next one. */
     private fun isStalled(): Boolean {
         val s = _state.value
-        return s.status == TimerStatus.PAUSED || (s.status == TimerStatus.IDLE && s.awaitingNext)
+        return s.status == TimerStatus.PAUSED ||
+            (s.status == TimerStatus.IDLE && (s.awaitingNext || s.awaitingDecision))
     }
 
     private fun startIdleAlert() {
@@ -478,12 +528,21 @@ class TimerEngine(
         }
     }
 
-    private fun persistCompletedPomodoro(project: Project, dayKey: String, durationSeconds: Int) {
-        val end = time.wallClockMs()
-        val start = end - durationSeconds * MILLIS_PER_SECOND
+    private fun persistCompletedPomodoro(
+        project: Project,
+        dayKey: String,
+        durationSeconds: Int,
+        endEpochMs: Long = time.wallClockMs()
+    ) {
+        val start = endEpochMs - durationSeconds * MILLIS_PER_SECOND
         launchStats("record a completed pomodoro") {
-            stats.recordCompletedPomodoro(project.id, dayKey, start, end, durationSeconds)
+            stats.recordCompletedPomodoro(project.id, dayKey, start, endEpochMs, durationSeconds)
         }
+    }
+
+    private fun clearPendingPhaseEnd() {
+        pendingEndDayKey = null
+        pendingEndWallClockMs = null
     }
 
     private fun refreshCompletedToday(project: Project) {
@@ -510,6 +569,7 @@ class TimerEngine(
         const val DAY_WATCH_INTERVAL_MS = 60_000L
         const val MILLIS_PER_SECOND = 1000L
         const val MILLIS_PER_MINUTE = 60_000L
+        const val SECONDS_PER_MINUTE = 60
         const val IDLE_STROBE_BLINKS = 3
         const val IDLE_STROBE_HALF_MS = 320L
     }
