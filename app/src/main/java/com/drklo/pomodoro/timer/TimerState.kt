@@ -17,8 +17,13 @@ data class TimerState(
     val completedToday: Int = 0,
     /** Pomodoros done since the last long break (per project), drives long-break scheduling. */
     val pomodorosSinceLongBreak: Int = 0,
-    /** A phase just finished and the user has not started the next one yet (idle alert window). */
+    /** Legacy between-phase waiting state. */
     val awaitingNext: Boolean = false,
+    /**
+     * The current phase reached zero and is waiting for an explicit decision:
+     * accept the transition, or extend this same phase by 5/10/15 minutes.
+     */
+    val awaitingDecision: Boolean = false,
     /** Toggled by the idle alert to flip on-screen colors (F-012). */
     val idleAlertActive: Boolean = false
 ) {
