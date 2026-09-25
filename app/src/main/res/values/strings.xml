@@ -12,6 +12,16 @@
     <string name="notif_pause">Pause</string>
     <string name="notif_resume">Resume</string>
     <string name="notif_reset">Reset</string>
+    <string name="phase_alert_channel_name">Phase finished</string>
+    <string name="phase_alert_channel_desc">Shows a prominent alert when work or a break finishes</string>
+    <string name="phase_end_work_title">Work finished</string>
+    <string name="phase_end_break_title">Break finished</string>
+    <string name="phase_end_start_break">Start break</string>
+    <string name="phase_end_return_to_work">Return to work</string>
+    <string name="phase_end_question">Continue to the next phase or extend this one?</string>
+    <string name="notif_extend_5">+5 min</string>
+    <string name="notif_extend_10">+10 min</string>
+    <string name="notif_extend_15">+15 min</string>
 
     <!-- Main screen -->
     <string name="minutes_short">MIN</string>
