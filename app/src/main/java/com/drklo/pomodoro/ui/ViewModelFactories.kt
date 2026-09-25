@@ -28,6 +28,7 @@ object ViewModelFactories {
             MainViewModel(
                 app = app,
                 engine = app.container.timerEngine,
+                freeTimerEngine = app.container.freeTimerEngine,
                 projectStore = app.container.projectRepository,
                 usageRepository = app.container.projectUsageRepository,
                 settingsSource = app.container.settingsRepository
