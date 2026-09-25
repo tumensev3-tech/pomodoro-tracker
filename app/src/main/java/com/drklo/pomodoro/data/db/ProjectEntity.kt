@@ -3,6 +3,7 @@ package com.drklo.pomodoro.data.db
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.drklo.pomodoro.data.model.Project
+import com.drklo.pomodoro.data.model.ProjectIcon
 
 @Entity(tableName = "projects")
 data class ProjectEntity(
@@ -18,6 +19,7 @@ data class ProjectEntity(
     val longBreakMinutes: Int,
     val longBreakInterval: Int,
     val orderIndex: Int,
+    val iconName: String = ProjectIcon.NONE.name,
     /**
      * When the user removed the project, or null while it is active. Archived projects leave the
      * carousel and the settings list but keep their row, so the pomodoros they own stay attributable
@@ -39,6 +41,7 @@ fun ProjectEntity.toDomain() = Project(
     longBreakMinutes = longBreakMinutes,
     longBreakInterval = longBreakInterval,
     orderIndex = orderIndex,
+    icon = ProjectIcon.fromName(iconName),
     archivedAt = archivedAt
 )
 
@@ -55,5 +58,6 @@ fun Project.toEntity() = ProjectEntity(
     longBreakMinutes = longBreakMinutes,
     longBreakInterval = longBreakInterval,
     orderIndex = orderIndex,
+    iconName = icon.name,
     archivedAt = archivedAt
 )
