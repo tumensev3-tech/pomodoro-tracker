@@ -39,6 +39,7 @@ class FreeTimerService : Service() {
         createChannel()
     }
 
+    @Suppress("ReturnCount")
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (intent?.action == ACTION_STOP) {
             engine.stop()
