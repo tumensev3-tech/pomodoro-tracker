@@ -1,0 +1,41 @@
+name: Build custom APK
+
+on:
+  push:
+    branches: [custom-vibration-v1.2]
+  workflow_dispatch:
+
+concurrency:
+  group: custom-apk-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build custom debug APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v7
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Restore stable Custom signing key
+        run: base64 --decode .github/pomodoro-custom-debug.b64 > pomodoro-custom-debug.jks
+
+      - name: Build APK
+        run: ./gradlew --no-daemon :app:assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v7
+        with:
+          name: pomodoro-custom-v1.2-apk
+          path: app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 30

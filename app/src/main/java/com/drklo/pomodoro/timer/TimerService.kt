@@ -38,6 +38,7 @@ class TimerService : Service() {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private var observeJob: Job? = null
+    private var eventJob: Job? = null
 
     /** Last posted appearance; see [notificationSignature]. */
     private var lastSignature: String? = null
@@ -65,6 +66,22 @@ class TimerService : Service() {
         when (intent?.action) {
             ACTION_TOGGLE -> engine.togglePlayPause()
             ACTION_RESET -> engine.reset()
+            ACTION_ACCEPT_PHASE_END -> {
+                engine.acceptPhaseEnd()
+                notificationManager().cancel(PHASE_END_NOTIFICATION_ID)
+            }
+            ACTION_EXTEND_5 -> {
+                engine.extendCurrentPhase(EXTEND_5_MINUTES)
+                notificationManager().cancel(PHASE_END_NOTIFICATION_ID)
+            }
+            ACTION_EXTEND_10 -> {
+                engine.extendCurrentPhase(EXTEND_10_MINUTES)
+                notificationManager().cancel(PHASE_END_NOTIFICATION_ID)
+            }
+            ACTION_EXTEND_15 -> {
+                engine.extendCurrentPhase(EXTEND_15_MINUTES)
+                notificationManager().cancel(PHASE_END_NOTIFICATION_ID)
+            }
         }
         startForeground(NOTIFICATION_ID, buildNotification())
         if (observeJob == null) {
@@ -75,9 +92,13 @@ class TimerService : Service() {
                 // NotificationManager until Android starts dropping updates ("has posted too many
                 // notifications") — paying IPC and a shade redraw for each one on the way there.
                 engine.state.collect { state ->
-                    if (state.status == TimerStatus.IDLE) {
+                    if (state.status == TimerStatus.IDLE && !state.awaitingDecision) {
+                        notificationManager().cancel(PHASE_END_NOTIFICATION_ID)
                         stopSelf()
                         return@collect
+                    }
+                    if (!state.awaitingDecision) {
+                        notificationManager().cancel(PHASE_END_NOTIFICATION_ID)
                     }
                     // The countdown itself is drawn by the system chronometer, so a re-post is only
                     // worth it when something else moved: the phase, the run state, or the progress
@@ -91,11 +112,24 @@ class TimerService : Service() {
                 }
             }
         }
+        if (eventJob == null) {
+            eventJob = scope.launch {
+                engine.events.collect { event ->
+                    if (event is TimerEvent.PhaseFinished) {
+                        notificationManager().notify(
+                            PHASE_END_NOTIFICATION_ID,
+                            buildPhaseEndNotification(event.phase)
+                        )
+                    }
+                }
+            }
+        }
         return START_STICKY
     }
 
     override fun onDestroy() {
         observeJob?.cancel()
+        eventJob?.cancel()
         scope.cancel()
         super.onDestroy()
     }
@@ -145,27 +179,82 @@ class TimerService : Service() {
                 .setContentText(formatMmSs(state.remainingSeconds))
         }
 
-        // Pause/Resume + Reset controls (F-101).
-        if (state.status == TimerStatus.RUNNING) {
+        // Pause/Resume + Reset controls (F-101). While waiting for a phase-end decision, the
+        // separate high-priority alert owns the controls.
+        if (!state.awaitingDecision) {
+            if (state.status == TimerStatus.RUNNING) {
+                builder.addAction(
+                    R.drawable.ic_notif_pause,
+                    localized.getString(R.string.notif_pause),
+                    actionPendingIntent(ACTION_TOGGLE)
+                )
+            } else {
+                builder.addAction(
+                    R.drawable.ic_notif_play,
+                    localized.getString(R.string.notif_resume),
+                    actionPendingIntent(ACTION_TOGGLE)
+                )
+            }
             builder.addAction(
-                R.drawable.ic_notif_pause,
-                localized.getString(R.string.notif_pause),
-                actionPendingIntent(ACTION_TOGGLE)
-            )
-        } else {
-            builder.addAction(
-                R.drawable.ic_notif_play,
-                localized.getString(R.string.notif_resume),
-                actionPendingIntent(ACTION_TOGGLE)
+                R.drawable.ic_notif_reset,
+                localized.getString(R.string.notif_reset),
+                actionPendingIntent(ACTION_RESET)
             )
         }
-        builder.addAction(
-            R.drawable.ic_notif_reset,
-            localized.getString(R.string.notif_reset),
-            actionPendingIntent(ACTION_RESET)
-        )
 
         return builder.build()
+    }
+
+    private fun buildPhaseEndNotification(finishedPhase: Phase): Notification {
+        val state = engine.state.value
+        val finishedWork = finishedPhase == Phase.POMODORO
+        val title = localized.getString(
+            if (finishedWork) R.string.phase_end_work_title else R.string.phase_end_break_title
+        )
+        val continueLabel = localized.getString(
+            if (finishedWork) R.string.phase_end_start_break else R.string.phase_end_return_to_work
+        )
+        val projectName = state.project?.name.orEmpty()
+
+        val openIntent = PendingIntent.getActivity(
+            this,
+            0,
+            Intent(this, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP),
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
+
+        return NotificationCompat.Builder(this, PHASE_ALERT_CHANNEL_ID)
+            .setSmallIcon(R.drawable.ic_timer_notification)
+            .setContentTitle(title)
+            .setContentText(projectName)
+            .setContentIntent(openIntent)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setCategory(NotificationCompat.CATEGORY_REMINDER)
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+            .setOngoing(true)
+            .setAutoCancel(false)
+            .setOnlyAlertOnce(true)
+            .addAction(
+                R.drawable.ic_notif_play,
+                continueLabel,
+                actionPendingIntent(ACTION_ACCEPT_PHASE_END)
+            )
+            .addAction(
+                R.drawable.ic_notif_play,
+                localized.getString(R.string.notif_extend_5),
+                actionPendingIntent(ACTION_EXTEND_5)
+            )
+            .addAction(
+                R.drawable.ic_notif_play,
+                localized.getString(R.string.notif_extend_10),
+                actionPendingIntent(ACTION_EXTEND_10)
+            )
+            .addAction(
+                R.drawable.ic_notif_play,
+                localized.getString(R.string.notif_extend_15),
+                actionPendingIntent(ACTION_EXTEND_15)
+            )
+            .build()
     }
 
     private fun actionPendingIntent(action: String): PendingIntent {
@@ -189,6 +278,21 @@ class TimerService : Service() {
             lockscreenVisibility = Notification.VISIBILITY_PUBLIC
         }
         notificationManager().createNotificationChannel(channel)
+
+        val phaseAlertChannel = NotificationChannel(
+            PHASE_ALERT_CHANNEL_ID,
+            localized.getString(R.string.phase_alert_channel_name),
+            NotificationManager.IMPORTANCE_HIGH
+        ).apply {
+            description = localized.getString(R.string.phase_alert_channel_desc)
+            setShowBadge(true)
+            lockscreenVisibility = Notification.VISIBILITY_PUBLIC
+            // The app already runs the selected long vibration waveform itself. Disabling the
+            // phone-side channel vibration avoids Android replacing that waveform with a short buzz.
+            enableVibration(false)
+            setSound(null, null)
+        }
+        notificationManager().createNotificationChannel(phaseAlertChannel)
     }
 
     private fun notificationManager(): NotificationManager =
@@ -210,17 +314,26 @@ class TimerService : Service() {
 
     companion object {
         private const val CHANNEL_ID = "timer_channel"
+        private const val PHASE_ALERT_CHANNEL_ID = "phase_alert_channel_v1"
         private const val NOTIFICATION_ID = 1001
+        private const val PHASE_END_NOTIFICATION_ID = 1002
 
         /** The countdown only ever shows whole seconds, so posting faster than this buys nothing. */
         private const val MIN_NOTIFICATION_INTERVAL_MS = 250L
 
         private const val MILLIS_PER_SECOND = 1000L
+        private const val EXTEND_5_MINUTES = 5
+        private const val EXTEND_10_MINUTES = 10
+        private const val EXTEND_15_MINUTES = 15
 
         /** Progress-bar resolution; finer steps would only mean more re-posts nobody can see. */
         private const val PROGRESS_STEPS = 100
         private const val ACTION_TOGGLE = "com.drklo.pomodoro.action.TOGGLE"
         private const val ACTION_RESET = "com.drklo.pomodoro.action.RESET"
+        private const val ACTION_ACCEPT_PHASE_END = "com.drklo.pomodoro.action.ACCEPT_PHASE_END"
+        private const val ACTION_EXTEND_5 = "com.drklo.pomodoro.action.EXTEND_5"
+        private const val ACTION_EXTEND_10 = "com.drklo.pomodoro.action.EXTEND_10"
+        private const val ACTION_EXTEND_15 = "com.drklo.pomodoro.action.EXTEND_15"
 
         fun start(context: Context) {
             context.startForegroundService(Intent(context, TimerService::class.java))

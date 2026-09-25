@@ -43,14 +43,18 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.drklo.pomodoro.R
 import com.drklo.pomodoro.data.model.Preset
+import com.drklo.pomodoro.data.model.ProjectIcon
 import com.drklo.pomodoro.data.model.ProjectLimits
 import com.drklo.pomodoro.ui.ViewModelFactories
 import com.drklo.pomodoro.ui.common.ConfirmDeleteProjectDialog
 import com.drklo.pomodoro.ui.common.Stepper
+import com.drklo.pomodoro.ui.common.labelRes
+import com.drklo.pomodoro.ui.common.symbol
 
 private val ColorPalette = listOf(
     // Bright / saturated
@@ -160,6 +164,16 @@ fun ProjectEditScreen(
                 modifier = Modifier.fillMaxWidth()
             )
 
+            FieldLabel(stringResource(R.string.label_project_icon))
+            ProjectIconRow(selected = p.icon) { icon ->
+                viewModel.edit { it.copy(icon = icon) }
+            }
+            Text(
+                text = stringResource(p.icon.labelRes()),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
             FieldLabel(stringResource(R.string.label_presets))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Preset.entries.forEach { preset ->
@@ -235,6 +249,44 @@ fun ProjectEditScreen(
                     onValueChange = { v -> viewModel.edit { it.copy(longBreakInterval = v) } },
                     min = ProjectLimits.longBreakInterval.first,
                     max = ProjectLimits.longBreakInterval.last
+                )
+            }
+        }
+    }
+}
+
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+@Composable
+private fun ProjectIconRow(selected: ProjectIcon, onPick: (ProjectIcon) -> Unit) {
+    androidx.compose.foundation.layout.FlowRow(
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        ProjectIcon.entries.forEach { icon ->
+            val selectedIcon = icon == selected
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .size(46.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                    .then(
+                        if (selectedIcon) {
+                            Modifier.border(
+                                3.dp,
+                                MaterialTheme.colorScheme.primary,
+                                CircleShape
+                            )
+                        } else {
+                            Modifier
+                        }
+                    )
+                    .clickable { onPick(icon) }
+            ) {
+                Text(
+                    text = icon.symbol(),
+                    fontSize = 24.sp
                 )
             }
         }

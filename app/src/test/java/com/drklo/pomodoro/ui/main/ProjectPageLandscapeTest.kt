@@ -64,7 +64,8 @@ class ProjectPageLandscapeTest {
                     onTap = {},
                     onReset = {},
                     onSeek = {},
-                    onChangePhase = {}
+                    onChangePhase = {},
+                    onChooseProject = {}
                 )
             )
         }

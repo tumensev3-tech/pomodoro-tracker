@@ -12,12 +12,37 @@
     <string name="notif_pause">Pause</string>
     <string name="notif_resume">Resume</string>
     <string name="notif_reset">Reset</string>
+    <string name="phase_alert_channel_name">Phase finished</string>
+    <string name="phase_alert_channel_desc">Shows a prominent alert when work or a break finishes</string>
+    <string name="phase_end_work_title">Work finished</string>
+    <string name="phase_end_break_title">Break finished</string>
+    <string name="phase_end_start_break">Start break</string>
+    <string name="phase_end_return_to_work">Return to work</string>
+    <string name="phase_end_question">Continue to the next phase or extend this one?</string>
+    <string name="notif_extend_5">+5 min</string>
+    <string name="notif_extend_10">+10 min</string>
+    <string name="notif_extend_15">+15 min</string>
+
+    <!-- Free timer -->
+    <string name="free_timer_title">Free timer</string>
+    <string name="free_timer_name_label">Activity name</string>
+    <string name="free_timer_start">Start</string>
+    <string name="free_timer_stop">Stop</string>
+    <string name="free_timer_open">Free timer</string>
+    <string name="free_timer_running">Elapsed time</string>
+    <string name="free_timer_channel_name">Free timer</string>
+    <string name="free_timer_channel_desc">Keeps an open-ended activity timer running in the background</string>
+    <string name="free_timer_notification_title">Free timer</string>
 
     <!-- Main screen -->
     <string name="minutes_short">MIN</string>
     <string name="action_reset">Reset</string>
     <string name="cd_settings">Settings</string>
     <string name="cd_play_pause">Play or pause</string>
+    <string name="cd_choose_project">Choose activity from list</string>
+    <string name="title_choose_project">Choose activity</string>
+    <string name="title_frequent_projects">Frequently used · 30 days</string>
+    <string name="title_all_projects">All activities</string>
     <!-- Announced for the dial: what the timer is doing and how much of the phase is left. -->
     <string name="cd_dial_running">Running, %1$s of %2$s left</string>
     <string name="cd_dial_paused">Paused, %1$s of %2$s left</string>
@@ -89,13 +114,15 @@
 
     <string name="setting_sound">Sounds</string>
     <string name="setting_vibrate">Vibration</string>
+    <string name="setting_vibration_pattern">Phase-end vibration</string>
+    <string name="setting_vibration_pattern_summary">Manual start keeps the short pulse. This pattern is used when work or a break finishes.</string>
+    <string name="vibration_short">Short</string>
+    <string name="vibration_medium">Medium</string>
+    <string name="vibration_long">Long</string>
+    <string name="vibration_call">Double short pulses (2 min)</string>
     <string name="setting_always_on">Keep screen on</string>
-    <string name="setting_autostart_pomodoros">Autostart pomodoros</string>
-    <string name="setting_autostart_breaks">Autostart breaks</string>
     <string name="setting_idle_alert">Idle alert</string>
     <string name="setting_idle_alert_summary">Flip screen colors every N min while idle (screen-on only)</string>
-    <string name="setting_hold_finished_color">Hold finished phase color</string>
-    <string name="setting_hold_finished_color_summary">While waiting to start the next phase, keep the color of the phase that just ended</string>
     <string name="setting_day_end">End of day</string>
     <string name="setting_day_end_summary">When a new day starts for goals</string>
     <string name="section_background">Background reliability</string>
@@ -115,6 +142,21 @@
     <string name="title_new_project">New project</string>
     <string name="title_edit_project">Edit project</string>
     <string name="label_name">Name</string>
+    <string name="label_project_icon">Activity icon</string>
+    <string name="project_icon_none">No icon</string>
+    <string name="project_icon_computer">Computer / work</string>
+    <string name="project_icon_book">Reading</string>
+    <string name="project_icon_study">Study</string>
+    <string name="project_icon_cooking">Cooking</string>
+    <string name="project_icon_home">Home / chores</string>
+    <string name="project_icon_car">Car / driving</string>
+    <string name="project_icon_tools">Tools / repairs</string>
+    <string name="project_icon_fitness">Sport</string>
+    <string name="project_icon_walk">Walking</string>
+    <string name="project_icon_music">Music</string>
+    <string name="project_icon_shopping">Shopping</string>
+    <string name="project_icon_coffee">Coffee / rest</string>
+    <string name="project_icon_creative">Creative</string>
     <string name="label_presets">Presets</string>
     <string name="label_focus">Focus</string>
     <string name="label_short_break">Short break</string>

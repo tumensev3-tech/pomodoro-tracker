@@ -13,11 +13,14 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
@@ -25,10 +28,13 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -62,10 +68,12 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.drklo.pomodoro.R
 import com.drklo.pomodoro.data.model.Phase
 import com.drklo.pomodoro.data.model.Project
+import com.drklo.pomodoro.data.model.ProjectIcon
 import com.drklo.pomodoro.data.model.TimerStatus
 import com.drklo.pomodoro.timer.TimerState
 import com.drklo.pomodoro.timer.formatMmSs
 import com.drklo.pomodoro.ui.ViewModelFactories
+import com.drklo.pomodoro.ui.common.symbol
 import com.drklo.pomodoro.ui.main.components.Fanfare
 import com.drklo.pomodoro.ui.main.components.PausedBookmark
 import com.drklo.pomodoro.ui.main.components.SessionBullets
@@ -81,6 +89,9 @@ import kotlinx.coroutines.withTimeoutOrNull
 
 /** Hide the system bars after this much inactivity on the main screen. */
 private const val IDLE_HIDE_MS = 3_000L
+private const val FREQUENT_PROJECT_LIMIT = 5
+private const val MIN_STARTS_FOR_FREQUENT = 3
+private val PHASE_EXTENSION_MINUTES = listOf(5, 10, 15)
 
 @Composable
 fun MainScreen(
@@ -90,8 +101,10 @@ fun MainScreen(
     viewModel: MainViewModel = viewModel(factory = ViewModelFactories.main)
 ) {
     val state by viewModel.timerState.collectAsStateWithLifecycle()
+    val freeTimer by viewModel.freeTimerState.collectAsStateWithLifecycle()
     val projects by viewModel.projects.collectAsStateWithLifecycle()
     val settings by viewModel.settings.collectAsStateWithLifecycle()
+    val recentStartCounts by viewModel.recentStartCounts.collectAsStateWithLifecycle()
     val fanfareTrigger by viewModel.fanfareTrigger.collectAsStateWithLifecycle()
 
     // Roll session bullets onto the current logical day whenever the app comes to the foreground,
@@ -154,7 +167,10 @@ fun MainScreen(
     }
 
     val isRunning = state.status == TimerStatus.RUNNING
-    val canSwipe = state.status == TimerStatus.IDLE || state.status == TimerStatus.PAUSED
+    val regularNavigationEnabled = !state.awaitingDecision && !freeTimer.running
+    val canSwipe =
+        (state.status == TimerStatus.IDLE || state.status == TimerStatus.PAUSED) &&
+            regularNavigationEnabled
 
     // Infinite carousel: a huge virtual page count starting in the middle; the real project index
     // is page % size, so swiping past the ends wraps around instead of hitting a boundary.
@@ -196,6 +212,9 @@ fun MainScreen(
     val viewedProject = projects.getOrNull(pagerState.currentPage % projects.size)
     val showBookmark = pausedProject != null && viewedProject?.id != pausedProject.id
     var shakeTrigger by remember { androidx.compose.runtime.mutableIntStateOf(0) }
+    var showProjectPicker by remember { mutableStateOf(false) }
+    var showFreeTimerDialog by remember { mutableStateOf(false) }
+    var freeTimerName by remember { mutableStateOf("") }
     val scope = rememberCoroutineScope()
 
     BoxWithConstraints(
@@ -239,7 +258,10 @@ fun MainScreen(
                     },
                     onReset = { if (isActive) viewModel.onReset() },
                     onSeek = { if (isActive) viewModel.onSeek(it) },
-                    onChangePhase = { if (isActive) viewModel.onChangePhase() }
+                    onChangePhase = { if (isActive) viewModel.onChangePhase() },
+                    onChooseProject = {
+                        if (!isRunning && regularNavigationEnabled) showProjectPicker = true
+                    }
                 )
             )
         }
@@ -265,8 +287,27 @@ fun MainScreen(
             )
         }
 
-        // Reports + burger — hidden during the active session for minimalism (F-019).
-        if (!isRunning) {
+        if (
+            state.status == TimerStatus.IDLE &&
+            !state.awaitingDecision &&
+            !freeTimer.running
+        ) {
+            TextButton(
+                onClick = { showFreeTimerDialog = true },
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .safeDrawingPadding()
+                    .padding(8.dp)
+            ) {
+                Text(
+                    text = "⏱ " + stringResource(R.string.free_timer_open),
+                    color = Color.White
+                )
+            }
+        }
+
+        // Reports + burger — hidden during an active timer for minimalism (F-019).
+        if (!isRunning && !freeTimer.running) {
             Row(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
@@ -297,12 +338,136 @@ fun MainScreen(
             }
         }
 
+        if (freeTimer.running) {
+            FreeTimerActiveScreen(
+                state = freeTimer,
+                onStop = viewModel::stopFreeTimer,
+                modifier = Modifier.fillMaxSize()
+            )
+        }
+
         Fanfare(
             trigger = fanfareTrigger,
             onShown = viewModel::onFanfareShown,
             modifier = Modifier.fillMaxSize()
         )
+
+        if (showProjectPicker && !isRunning && regularNavigationEnabled) {
+            ProjectPickerDialog(
+                projects = projects,
+                recentStartCounts = recentStartCounts,
+                selectedProjectId = viewedProject?.id,
+                onDismiss = { showProjectPicker = false },
+                onSelect = { index ->
+                    showProjectPicker = false
+                    val base = pagerState.currentPage -
+                        (pagerState.currentPage % projects.size)
+                    scope.launch { pagerState.scrollToPage(base + index) }
+                }
+            )
+        }
+
+        if (showFreeTimerDialog && !freeTimer.running) {
+            FreeTimerStartDialog(
+                name = freeTimerName,
+                onNameChange = { freeTimerName = it },
+                onDismiss = {
+                    showFreeTimerDialog = false
+                    freeTimerName = ""
+                },
+                onStart = {
+                    if (viewModel.startFreeTimer(freeTimerName)) {
+                        showFreeTimerDialog = false
+                        freeTimerName = ""
+                    }
+                }
+            )
+        }
+
+        if (state.awaitingDecision && !freeTimer.running) {
+            PhaseEndDecisionDialog(
+                state = state,
+                onContinue = viewModel::onAcceptPhaseEnd,
+                onExtend = viewModel::onExtendPhase
+            )
+        }
     }
+}
+
+@Composable
+private fun PhaseEndDecisionDialog(
+    state: TimerState,
+    onContinue: () -> Unit,
+    onExtend: (Int) -> Unit
+) {
+    val finishedWork = state.phase == Phase.POMODORO
+    val title = stringResource(
+        if (finishedWork) R.string.phase_end_work_title else R.string.phase_end_break_title
+    )
+    val continueLabel = stringResource(
+        if (finishedWork) R.string.phase_end_start_break else R.string.phase_end_return_to_work
+    )
+    val activityName = state.project?.name.orEmpty()
+    val activityIcon = state.project?.icon
+    val phaseEmoji = when {
+        finishedWork && activityIcon != null && activityIcon != ProjectIcon.NONE -> activityIcon.symbol()
+        finishedWork -> "💼"
+        else -> "☕"
+    }
+
+    AlertDialog(
+        onDismissRequest = { /* A phase-end decision is required. */ },
+        icon = {
+            Text(
+                text = phaseEmoji,
+                fontSize = 56.sp
+            )
+        },
+        title = {
+            Text(
+                text = title,
+                fontWeight = FontWeight.Bold
+            )
+        },
+        text = {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                if (activityName.isNotBlank()) {
+                    Text(
+                        text = activityName,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                    Spacer(Modifier.height(8.dp))
+                }
+                Text(
+                    text = stringResource(R.string.phase_end_question),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(Modifier.height(18.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    PHASE_EXTENSION_MINUTES.forEach { minutes ->
+                        TextButton(onClick = { onExtend(minutes) }) {
+                            Text("+$minutes " + stringResource(R.string.minutes_unit))
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = onContinue,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(continueLabel)
+            }
+        }
+    )
 }
 
 /** What a carousel page can do; they always travel together, so they travel as one. */
@@ -311,7 +476,8 @@ internal data class PageActions(
     val onTap: () -> Unit,
     val onReset: () -> Unit,
     val onSeek: (Float) -> Unit,
-    val onChangePhase: () -> Unit
+    val onChangePhase: () -> Unit,
+    val onChooseProject: () -> Unit
 )
 
 /** Placeholder shown while there is no project to draw — never a blank, uncontrollable screen. */
@@ -347,6 +513,124 @@ private fun EmptyProjects(onOpenSettings: () -> Unit) {
 }
 
 @Composable
+private fun ProjectPickerDialog(
+    projects: List<Project>,
+    recentStartCounts: Map<Long, Int>,
+    selectedProjectId: Long?,
+    onDismiss: () -> Unit,
+    onSelect: (Int) -> Unit
+) {
+    val totalRecentStarts = recentStartCounts.values.sum()
+    val frequentProjects = if (totalRecentStarts >= MIN_STARTS_FOR_FREQUENT) {
+        projects
+            .mapIndexed { index, project ->
+                Triple(index, project, recentStartCounts[project.id] ?: 0)
+            }
+            .filter { it.third > 0 }
+            .sortedWith(
+                compareByDescending<Triple<Int, Project, Int>> { it.third }
+                    .thenBy { it.first }
+            )
+            .take(FREQUENT_PROJECT_LIMIT)
+    } else {
+        emptyList()
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.title_choose_project)) },
+        text = {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 480.dp)
+            ) {
+                if (frequentProjects.isNotEmpty()) {
+                    item(key = "frequent_header") {
+                        Text(
+                            text = stringResource(R.string.title_frequent_projects),
+                            color = MaterialTheme.colorScheme.primary,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier.padding(start = 4.dp, top = 4.dp, bottom = 4.dp)
+                        )
+                    }
+                    itemsIndexed(
+                        items = frequentProjects,
+                        key = { _, item -> "frequent-${item.second.id}" }
+                    ) { _, item ->
+                        ProjectPickerRow(
+                            project = item.second,
+                            selected = item.second.id == selectedProjectId,
+                            onClick = { onSelect(item.first) }
+                        )
+                    }
+                    item(key = "all_header") {
+                        Text(
+                            text = stringResource(R.string.title_all_projects),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier.padding(start = 4.dp, top = 14.dp, bottom = 4.dp)
+                        )
+                    }
+                }
+
+                itemsIndexed(
+                    items = projects,
+                    key = { _, project -> "all-${project.id}" }
+                ) { index, project ->
+                    ProjectPickerRow(
+                        project = project,
+                        selected = project.id == selectedProjectId,
+                        onClick = { onSelect(index) }
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.action_cancel))
+            }
+        }
+    )
+}
+
+@Composable
+private fun ProjectPickerRow(
+    project: Project,
+    selected: Boolean,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(horizontal = 4.dp, vertical = 13.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = if (selected) "✓" else " ",
+            color = MaterialTheme.colorScheme.primary,
+            fontSize = 18.sp
+        )
+        if (project.icon != ProjectIcon.NONE) {
+            Text(
+                text = project.icon.symbol(),
+                fontSize = 22.sp,
+                modifier = Modifier.padding(start = 10.dp)
+            )
+        }
+        Text(
+            text = project.name,
+            color = MaterialTheme.colorScheme.onSurface,
+            fontSize = 18.sp,
+            modifier = Modifier.padding(start = 10.dp)
+        )
+    }
+}
+
+@Composable
 internal fun ProjectPage(
     project: Project,
     /**
@@ -363,6 +647,7 @@ internal fun ProjectPage(
     val onReset = actions.onReset
     val onSeek = actions.onSeek
     val onChangePhase = actions.onChangePhase
+    val onChooseProject = actions.onChooseProject
     // The page reflects live state only for the active project; others show an idle preview.
     val isActive = state != null
     val phase = state?.phase ?: Phase.POMODORO
@@ -455,7 +740,8 @@ internal fun ProjectPage(
             color = fg,
             compact = compact,
             onChangePhase = onChangePhase.takeIf { canChangePhase },
-            changePhaseLabel = changePhaseLabel
+            changePhaseLabel = changePhaseLabel,
+            onChooseProject = onChooseProject.takeIf { status != TimerStatus.RUNNING }
         )
     }
 
@@ -530,7 +816,8 @@ private fun ProjectDetails(
     compact: Boolean,
     /** Null when the phase cannot be changed right now — while running (F-021). */
     onChangePhase: (() -> Unit)?,
-    changePhaseLabel: String
+    changePhaseLabel: String,
+    onChooseProject: (() -> Unit)?
 ) {
     // A row of circles says nothing out loud. Merged into one node so a screen reader announces the
     // progress once instead of walking eight unlabelled dots.
@@ -548,12 +835,30 @@ private fun ProjectDetails(
         }
     )
     Spacer(Modifier.height(if (compact) 8.dp else 12.dp))
-    Text(
-        text = project.name,
-        fontSize = if (compact) 18.sp else 22.sp,
-        fontWeight = FontWeight.Medium,
-        color = color
-    )
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = if (onChooseProject != null) {
+            Modifier.clickable(onClickLabel = stringResource(R.string.cd_choose_project)) {
+                onChooseProject()
+            }
+        } else {
+            Modifier
+        }
+    ) {
+        if (project.icon != ProjectIcon.NONE) {
+            Text(
+                text = project.icon.symbol(),
+                fontSize = if (compact) 20.sp else 26.sp
+            )
+            Spacer(Modifier.padding(horizontal = 3.dp))
+        }
+        Text(
+            text = if (onChooseProject != null) "${project.name} ▾" else project.name,
+            fontSize = if (compact) 18.sp else 22.sp,
+            fontWeight = FontWeight.Medium,
+            color = color
+        )
+    }
     Spacer(Modifier.height(if (compact) 4.dp else 6.dp))
     // Phase type — always visible so the user knows pomodoro vs break (#7); tap to change (F-021).
     Text(
@@ -605,7 +910,13 @@ private fun ProjectPageLandscapePreview() {
             state = null,
             isLandscape = true,
             holdFinishedColor = false,
-            actions = PageActions(onTap = {}, onReset = {}, onSeek = {}, onChangePhase = {})
+            actions = PageActions(
+                onTap = {},
+                onReset = {},
+                onSeek = {},
+                onChangePhase = {},
+                onChooseProject = {}
+            )
         )
     }
 }

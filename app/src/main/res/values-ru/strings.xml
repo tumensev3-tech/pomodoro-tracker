@@ -12,12 +12,37 @@
     <string name="notif_pause">Пауза</string>
     <string name="notif_resume">Продолжить</string>
     <string name="notif_reset">Сброс</string>
+    <string name="phase_alert_channel_name">Окончание этапа</string>
+    <string name="phase_alert_channel_desc">Заметное уведомление, когда заканчивается работа или перерыв</string>
+    <string name="phase_end_work_title">Работа закончена</string>
+    <string name="phase_end_break_title">Перерыв закончен</string>
+    <string name="phase_end_start_break">Начать перерыв</string>
+    <string name="phase_end_return_to_work">Вернуться к работе</string>
+    <string name="phase_end_question">Перейти к следующему этапу или продлить текущий?</string>
+    <string name="notif_extend_5">+5 мин</string>
+    <string name="notif_extend_10">+10 мин</string>
+    <string name="notif_extend_15">+15 мин</string>
+
+    <!-- Свободный таймер -->
+    <string name="free_timer_title">Свободный таймер</string>
+    <string name="free_timer_name_label">Название занятия</string>
+    <string name="free_timer_start">Старт</string>
+    <string name="free_timer_stop">Стоп</string>
+    <string name="free_timer_open">Свободный таймер</string>
+    <string name="free_timer_running">Прошло времени</string>
+    <string name="free_timer_channel_name">Свободный таймер</string>
+    <string name="free_timer_channel_desc">Сохраняет таймер занятия при работе в фоне и блокировке экрана</string>
+    <string name="free_timer_notification_title">Свободный таймер</string>
 
     <!-- Main screen -->
     <string name="minutes_short">МИН</string>
     <string name="action_reset">Сброс</string>
     <string name="cd_settings">Настройки</string>
     <string name="cd_play_pause">Старт или пауза</string>
+    <string name="cd_choose_project">Выбрать активность из списка</string>
+    <string name="title_choose_project">Выберите активность</string>
+    <string name="title_frequent_projects">Часто используемые · 30 дней</string>
+    <string name="title_all_projects">Все активности</string>
     <!-- Озвучивается для циферблата: что делает таймер и сколько осталось от фазы. -->
     <string name="cd_dial_running">Идёт, осталось %1$s из %2$s</string>
     <string name="cd_dial_paused">Пауза, осталось %1$s из %2$s</string>
@@ -88,13 +113,15 @@
 
     <string name="setting_sound">Звуки</string>
     <string name="setting_vibrate">Вибрация</string>
+    <string name="setting_vibration_pattern">Вибрация в конце этапа</string>
+    <string name="setting_vibration_pattern_summary">При ручном запуске остаётся короткий импульс. Выбранный режим срабатывает, когда заканчивается работа или пауза.</string>
+    <string name="vibration_short">Короткая</string>
+    <string name="vibration_medium">Средняя</string>
+    <string name="vibration_long">Длинная</string>
+    <string name="vibration_call">Двойные короткие импульсы (2 мин)</string>
     <string name="setting_always_on">Не гасить экран</string>
-    <string name="setting_autostart_pomodoros">Автозапуск помидорок</string>
-    <string name="setting_autostart_breaks">Автозапуск пауз</string>
     <string name="setting_idle_alert">Алерт при простое</string>
     <string name="setting_idle_alert_summary">Менять цвета экрана каждые N мин при простое (только при включённом экране)</string>
-    <string name="setting_hold_finished_color">Держать цвет завершённого этапа</string>
-    <string name="setting_hold_finished_color_summary">Пока ждём запуск следующего этапа, оставлять цвет того, что только что закончился</string>
     <string name="setting_day_end">Конец дня</string>
     <string name="setting_day_end_summary">Когда начинается новый день для целей</string>
     <string name="section_background">Работа в фоне</string>
@@ -114,6 +141,21 @@
     <string name="title_new_project">Новый проект</string>
     <string name="title_edit_project">Редактирование проекта</string>
     <string name="label_name">Название</string>
+    <string name="label_project_icon">Иконка занятия</string>
+    <string name="project_icon_none">Без иконки</string>
+    <string name="project_icon_computer">Компьютер / работа</string>
+    <string name="project_icon_book">Чтение</string>
+    <string name="project_icon_study">Учёба</string>
+    <string name="project_icon_cooking">Готовка</string>
+    <string name="project_icon_home">Дом / быт</string>
+    <string name="project_icon_car">Машина / поездки</string>
+    <string name="project_icon_tools">Инструменты / ремонт</string>
+    <string name="project_icon_fitness">Спорт</string>
+    <string name="project_icon_walk">Прогулка</string>
+    <string name="project_icon_music">Музыка</string>
+    <string name="project_icon_shopping">Покупки</string>
+    <string name="project_icon_coffee">Кофе / отдых</string>
+    <string name="project_icon_creative">Творчество</string>
     <string name="label_presets">Пресеты</string>
     <string name="label_focus">Фокус</string>
     <string name="label_short_break">Короткая пауза</string>

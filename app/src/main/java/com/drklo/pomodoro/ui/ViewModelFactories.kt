@@ -28,7 +28,9 @@ object ViewModelFactories {
             MainViewModel(
                 app = app,
                 engine = app.container.timerEngine,
+                freeTimerEngine = app.container.freeTimerEngine,
                 projectStore = app.container.projectRepository,
+                usageRepository = app.container.projectUsageRepository,
                 settingsSource = app.container.settingsRepository
             )
         }
@@ -57,7 +59,11 @@ object ViewModelFactories {
                 // generate. It is written into the file for a human reading it later, nothing more.
                 appVersion = app.packageManager.getPackageInfo(app.packageName, 0).versionName.orEmpty(),
                 // Asked at the moment of the import, not captured now.
-                timerIsBusy = { app.container.timerEngine.state.value.status != TimerStatus.IDLE }
+                timerIsBusy = {
+                    app.container.timerEngine.state.value.status != TimerStatus.IDLE ||
+                        app.container.timerEngine.state.value.awaitingDecision ||
+                        app.container.freeTimerEngine.state.value.running
+                }
             )
         }
     }

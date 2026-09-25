@@ -8,6 +8,7 @@ import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
 import android.util.Log
+import com.drklo.pomodoro.data.model.VibrationPattern
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -93,16 +94,70 @@ class TimerEffects(context: Context) : PhaseFeedback {
         if (endSoundId != 0) soundPool.play(endSoundId, 1f, 1f, 1, 0, 1f)
     }
 
+    /** Short acknowledgement for a manual timer start. */
     override fun vibrate() = vibrate(DEFAULT_VIBRATION_MS)
 
-    fun vibrate(durationMs: Long) {
+    /** Noticeable phase-end vibration selected in Settings. */
+    override fun vibrate(pattern: VibrationPattern) {
+        val effect = when (pattern) {
+            VibrationPattern.SHORT -> oneShot(DEFAULT_VIBRATION_MS)
+            VibrationPattern.MEDIUM -> VibrationEffect.createWaveform(MEDIUM_PATTERN_MS, -1)
+            VibrationPattern.LONG -> VibrationEffect.createWaveform(LONG_PATTERN_MS, -1)
+            VibrationPattern.CALL -> VibrationEffect.createWaveform(CALL_PATTERN_MS, -1)
+        }
+        vibrate(effect)
+    }
+
+    fun vibrate(durationMs: Long) = vibrate(oneShot(durationMs))
+
+    override fun cancelVibration() {
+        vibrator?.cancel()
+    }
+
+    private fun oneShot(durationMs: Long): VibrationEffect =
+        VibrationEffect.createOneShot(durationMs, VibrationEffect.DEFAULT_AMPLITUDE)
+
+    private fun vibrate(effect: VibrationEffect) {
         val v = vibrator ?: return
         if (!v.hasVibrator()) return
-        v.vibrate(VibrationEffect.createOneShot(durationMs, VibrationEffect.DEFAULT_AMPLITUDE))
+        v.vibrate(effect)
     }
 
     private companion object {
         const val TAG = "TimerEffects"
         const val DEFAULT_VIBRATION_MS = 400L
+
+        // Waveforms alternate pause / vibration, starting immediately with the leading zero.
+        val MEDIUM_PATTERN_MS = longArrayOf(
+            0L,
+            700L,
+            250L,
+            700L
+        )
+        val LONG_PATTERN_MS = longArrayOf(
+            0L,
+            900L,
+            300L,
+            900L,
+            300L,
+            900L
+        )
+        private const val CALL_PULSE_MS = 120L
+        private const val CALL_INTRA_PAUSE_MS = 100L
+        private const val CALL_GROUP_PAUSE_MS = 550L
+        private const val CALL_GROUPS = 135
+        private const val CALL_GROUP_PARTS = 4
+
+        // About two minutes of "tap-tap ... tap-tap" vibration. Two very short pulses are easier
+        // to recognise than a long buzz and the longer gap keeps the pattern from blending together.
+        val CALL_PATTERN_MS = LongArray(1 + CALL_GROUPS * CALL_GROUP_PARTS) { index ->
+            when {
+                index == 0 -> 0L
+                (index - 1) % CALL_GROUP_PARTS == 0 -> CALL_PULSE_MS
+                (index - 1) % CALL_GROUP_PARTS == 1 -> CALL_INTRA_PAUSE_MS
+                (index - 1) % CALL_GROUP_PARTS == 2 -> CALL_PULSE_MS
+                else -> CALL_GROUP_PAUSE_MS
+            }
+        }
     }
 }

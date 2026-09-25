@@ -63,6 +63,11 @@ class TimerEngineTest {
         advance(project.focusMinutes * 60_000L)
     }
 
+    private fun TestScope.acceptPhaseEnd(h: Harness) {
+        h.engine.acceptPhaseEnd()
+        runCurrent()
+    }
+
     @Test
     fun `a pomodoro counts down and hands over to the short break`() = runTest {
         val h = harness()
@@ -79,9 +84,15 @@ class TimerEngineTest {
         assertEquals(24 * 60, h.state.remainingSeconds)
 
         advance(24 * 60_000L)
-        assertEquals(Phase.SHORT_BREAK, h.state.phase)
+        assertEquals(Phase.POMODORO, h.state.phase)
         assertEquals(TimerStatus.IDLE, h.state.status)
-        assertTrue("the user has not started the break yet", h.state.awaitingNext)
+        assertTrue("the finished work waits for a decision", h.state.awaitingDecision)
+        assertEquals(0, h.state.remainingSeconds)
+        assertEquals(0, h.state.completedToday)
+
+        acceptPhaseEnd(h)
+        assertEquals(Phase.SHORT_BREAK, h.state.phase)
+        assertEquals(TimerStatus.RUNNING, h.state.status)
         assertEquals(5 * 60, h.state.remainingSeconds)
         assertEquals(1, h.state.completedToday)
         assertEquals(1, h.state.completedInSession)
@@ -94,12 +105,14 @@ class TimerEngineTest {
         runCurrent()
         runPomodoro(h)
 
-        // Idling well past the end must not re-trigger the completed phase.
+        // Waiting for a decision must not record or re-trigger the phase.
         advance(30 * 60_000L)
+        assertEquals(0, h.stats.records.size)
+        assertEquals(1, h.feedback.ends)
 
+        acceptPhaseEnd(h)
         assertEquals(1, h.stats.records.size)
         assertEquals(1, h.state.completedToday)
-        assertEquals(1, h.feedback.ends)
     }
 
     @Test
@@ -108,6 +121,7 @@ class TimerEngineTest {
         h.engine.setActiveProject(work)
         runCurrent()
         runPomodoro(h)
+        acceptPhaseEnd(h)
 
         val record = h.stats.records.single()
         assertEquals(work.id, record.projectId)
@@ -122,11 +136,13 @@ class TimerEngineTest {
         h.engine.setActiveProject(work)
         runCurrent()
         runPomodoro(h)
-
-        h.engine.togglePlayPause()
+        acceptPhaseEnd(h)
         advance(5 * 60_000L)
+        assertTrue(h.state.awaitingDecision)
 
+        acceptPhaseEnd(h)
         assertEquals(Phase.POMODORO, h.state.phase)
+        assertEquals(TimerStatus.RUNNING, h.state.status)
         assertEquals(1, h.stats.records.size)
         assertEquals(1, h.state.completedToday)
     }
@@ -140,37 +156,42 @@ class TimerEngineTest {
             longBreakMinutes = 15,
             longBreakInterval = 2
         )
-        val h = harness(GlobalSettings(autostartBreaks = true, autostartPomodoros = true))
+        val h = harness()
         h.engine.setActiveProject(project)
         runCurrent()
 
-        h.engine.togglePlayPause()
-        advance(25 * 60_000L)
+        runPomodoro(h, project)
+        acceptPhaseEnd(h)
         assertEquals(Phase.SHORT_BREAK, h.state.phase)
         assertEquals(1, h.state.pomodorosSinceLongBreak)
 
-        // Autostart carries it through the break and straight into the second pomodoro.
-        advance(5 * 60_000L + 25 * 60_000L)
+        advance(5 * 60_000L)
+        acceptPhaseEnd(h)
+        advance(25 * 60_000L)
+        acceptPhaseEnd(h)
+
         assertEquals(Phase.LONG_BREAK, h.state.phase)
+        assertEquals(TimerStatus.RUNNING, h.state.status)
         assertEquals(15 * 60, h.state.remainingSeconds)
         assertEquals(0, h.state.pomodorosSinceLongBreak)
         assertEquals(2, h.stats.records.size)
     }
 
     @Test
-    fun `autostart starts the next phase by itself, a plain finish waits for the user`() = runTest {
-        val auto = harness(GlobalSettings(autostartBreaks = true))
-        auto.engine.setActiveProject(work)
+    fun `a finished phase waits for a decision even if legacy autostart settings are enabled`() = runTest {
+        val h = harness(GlobalSettings(autostartBreaks = true, autostartPomodoros = true))
+        h.engine.setActiveProject(work)
         runCurrent()
-        runPomodoro(auto)
-        assertEquals(TimerStatus.RUNNING, auto.state.status)
-        assertEquals(Phase.SHORT_BREAK, auto.state.phase)
 
-        val manual = harness()
-        manual.engine.setActiveProject(work)
-        runCurrent()
-        runPomodoro(manual)
-        assertEquals(TimerStatus.IDLE, manual.state.status)
+        runPomodoro(h)
+
+        assertEquals(TimerStatus.IDLE, h.state.status)
+        assertEquals(Phase.POMODORO, h.state.phase)
+        assertTrue(h.state.awaitingDecision)
+
+        acceptPhaseEnd(h)
+        assertEquals(TimerStatus.RUNNING, h.state.status)
+        assertEquals(Phase.SHORT_BREAK, h.state.phase)
     }
 
     @Test
@@ -191,6 +212,11 @@ class TimerEngineTest {
 
         h.engine.togglePlayPause()
         advance(15 * 60_000L)
+        assertEquals(Phase.POMODORO, h.state.phase)
+        assertTrue(h.state.awaitingDecision)
+        assertEquals(0, h.stats.records.size)
+
+        acceptPhaseEnd(h)
         assertEquals(Phase.SHORT_BREAK, h.state.phase)
         assertEquals(1, h.stats.records.size)
     }
@@ -206,7 +232,8 @@ class TimerEngineTest {
         assertEquals(750, h.state.remainingSeconds)
 
         advance(750_000)
-        assertEquals(Phase.SHORT_BREAK, h.state.phase)
+        assertEquals(Phase.POMODORO, h.state.phase)
+        assertTrue(h.state.awaitingDecision)
     }
 
     @Test
@@ -235,6 +262,7 @@ class TimerEngineTest {
         h.engine.setActiveProject(work)
         runCurrent()
         runPomodoro(h)
+        acceptPhaseEnd(h)
 
         assertEquals("2026-05-12", h.stats.records.single().dayKey)
     }
@@ -266,6 +294,7 @@ class TimerEngineTest {
         assertEquals(8, h.state.completedToday)
 
         runPomodoro(h)
+        acceptPhaseEnd(h)
 
         assertEquals("2026-05-13", h.stats.records.single().dayKey)
         assertEquals("today is a new day, not yesterday's ninth", 1, h.state.completedToday)
@@ -288,6 +317,7 @@ class TimerEngineTest {
         h.engine.setActiveProject(project)
         runCurrent()
         runPomodoro(h, project)
+        acceptPhaseEnd(h)
 
         // On yesterday's inflated count the goal would look long since met and stay silent forever.
         assertEquals(1, events.filterIsInstance<TimerEvent.GoalReached>().size)
@@ -300,6 +330,7 @@ class TimerEngineTest {
         runCurrent()
 
         runPomodoro(h)
+        acceptPhaseEnd(h)
 
         assertEquals(4, h.state.completedToday)
     }
@@ -322,13 +353,16 @@ class TimerEngineTest {
 
         engine.togglePlayPause()
         advance(25 * 60_000L)
+        engine.acceptPhaseEnd()
+        runCurrent()
 
         // The pomodoro is lost from the history — that is the cost — but the session goes on.
         assertEquals(Phase.SHORT_BREAK, engine.state.value.phase)
         assertEquals(1, engine.state.value.completedToday)
 
-        engine.togglePlayPause()
         advance(5 * 60_000L)
+        engine.acceptPhaseEnd()
+        runCurrent()
         assertEquals(Phase.POMODORO, engine.state.value.phase)
     }
 
@@ -370,11 +404,9 @@ class TimerEngineTest {
     }
 
     @Test
-    fun `an autostarted phase never publishes an idle frame`() = runTest {
-        val h = harness(GlobalSettings(autostartBreaks = true))
+    fun `phase end publishes a stable idle decision and accept starts the next phase`() = runTest {
+        val h = harness()
         val frames = mutableListOf<TimerState>()
-        // Unconfined resumes the collector at the point of emission, so it sees every published
-        // frame instead of only the latest — which is the whole question here.
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
             h.engine.state.collect { frames += it }
         }
@@ -384,12 +416,37 @@ class TimerEngineTest {
 
         runPomodoro(h)
 
+        assertEquals(TimerStatus.IDLE, h.state.status)
+        assertTrue(h.state.awaitingDecision)
+        assertTrue(frames.any { it.status == TimerStatus.IDLE && it.awaitingDecision })
+
+        acceptPhaseEnd(h)
         assertEquals(Phase.SHORT_BREAK, h.state.phase)
         assertEquals(TimerStatus.RUNNING, h.state.status)
-        val idle = frames.filter { it.status == TimerStatus.IDLE }
-        // The foreground service stops itself on IDLE; one such frame in the handover and the
-        // autostarted break runs with no notification behind it.
-        assertTrue("no IDLE frame may appear between two phases, saw ${idle.size}", idle.isEmpty())
+    }
+
+    @Test
+    fun `extending a finished phase keeps it as one longer interval`() = runTest {
+        val h = harness()
+        h.engine.setActiveProject(work)
+        runCurrent()
+
+        runPomodoro(h)
+        assertTrue(h.state.awaitingDecision)
+
+        h.engine.extendCurrentPhase(5)
+        runCurrent()
+        assertEquals(TimerStatus.RUNNING, h.state.status)
+        assertEquals(30 * 60, h.state.totalSeconds)
+        assertEquals(5 * 60, h.state.remainingSeconds)
+
+        advance(5 * 60_000L)
+        assertTrue(h.state.awaitingDecision)
+        acceptPhaseEnd(h)
+
+        val record = h.stats.records.single()
+        assertEquals(30 * 60, record.durationSeconds)
+        assertEquals(Phase.SHORT_BREAK, h.state.phase)
     }
 
     @Test
@@ -433,6 +490,7 @@ class TimerEngineTest {
         h.engine.setActiveProject(work)
         runCurrent()
         runPomodoro(h)
+        acceptPhaseEnd(h)
 
         h.engine.setActiveProject(work)
         advance(1_000)

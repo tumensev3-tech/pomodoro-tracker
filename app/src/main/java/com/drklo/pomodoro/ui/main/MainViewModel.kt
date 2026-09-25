@@ -8,6 +8,10 @@ import com.drklo.pomodoro.data.model.Phase
 import com.drklo.pomodoro.data.model.Project
 import com.drklo.pomodoro.data.model.TimerStatus
 import com.drklo.pomodoro.data.repository.ProjectStore
+import com.drklo.pomodoro.data.repository.ProjectUsageRepository
+import com.drklo.pomodoro.timer.FreeTimerEngine
+import com.drklo.pomodoro.timer.FreeTimerService
+import com.drklo.pomodoro.timer.FreeTimerState
 import com.drklo.pomodoro.timer.SettingsSource
 import com.drklo.pomodoro.timer.TimerEngine
 import com.drklo.pomodoro.timer.TimerEvent
@@ -20,20 +24,27 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 
+@Suppress("TooManyFunctions")
 class MainViewModel(
     app: Application,
     private val engine: TimerEngine,
+    private val freeTimerEngine: FreeTimerEngine,
     projectStore: ProjectStore,
+    private val usageRepository: ProjectUsageRepository,
     settingsSource: SettingsSource
 ) : AndroidViewModel(app) {
 
     val timerState: StateFlow<TimerState> = engine.state
+    val freeTimerState: StateFlow<FreeTimerState> = freeTimerEngine.state
 
     val projects: StateFlow<List<Project>> = projectStore.projects
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     val settings: StateFlow<GlobalSettings> = settingsSource.settings
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), GlobalSettings())
+
+    val recentStartCounts: StateFlow<Map<Long, Int>> = usageRepository.recentStartCounts
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
 
     /**
      * Incremented each time the daily goal is reached, and cleared once the celebration has played
@@ -91,15 +102,41 @@ class MainViewModel(
     }
 
     fun onPlayPause() {
+        if (freeTimerEngine.state.value.running) return
         val wasIdle = engine.state.value.status == TimerStatus.IDLE
         engine.togglePlayPause()
         if (wasIdle && engine.state.value.status == TimerStatus.RUNNING) {
+            engine.state.value.project?.id?.let { projectId ->
+                launchSafely { usageRepository.recordManualStart(projectId) }
+            }
             TimerService.start(getApplication())
         }
     }
 
     fun onReset() {
         engine.reset()
+    }
+
+    fun startFreeTimer(name: String): Boolean {
+        val normalTimer = engine.state.value
+        if (normalTimer.status != TimerStatus.IDLE || normalTimer.awaitingDecision) return false
+        val started = freeTimerEngine.start(name)
+        if (started) FreeTimerService.start(getApplication())
+        return started
+    }
+
+    fun stopFreeTimer() {
+        freeTimerEngine.stop()
+    }
+
+    fun onAcceptPhaseEnd() {
+        engine.acceptPhaseEnd()
+        TimerService.start(getApplication())
+    }
+
+    fun onExtendPhase(minutes: Int) {
+        engine.extendCurrentPhase(minutes)
+        TimerService.start(getApplication())
     }
 
     /** Scrubs the active interval's remaining time to [fraction] of its total (dial drag). */
@@ -115,6 +152,7 @@ class MainViewModel(
         val list = projects.value
         val project = list.getOrNull(index) ?: return
         val status = engine.state.value.status
+        if (freeTimerEngine.state.value.running) return
         if (status == TimerStatus.RUNNING || status == TimerStatus.PAUSED) return
         if (project.id == engine.state.value.project?.id) return
         engine.setActiveProject(project)

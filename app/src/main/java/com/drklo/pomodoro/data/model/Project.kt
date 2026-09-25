@@ -26,6 +26,8 @@ data class Project(
     val longBreakInterval: Int,
     /** Position in the carousel. */
     val orderIndex: Int,
+    /** Optional pictogram selected by the user for faster visual recognition. */
+    val icon: ProjectIcon = ProjectIcon.NONE,
     /** Set when the project was removed; archived projects live on in the reports only. */
     val archivedAt: Long? = null
 ) {
