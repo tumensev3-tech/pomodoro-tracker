@@ -29,6 +29,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -162,7 +163,9 @@ fun MainScreen(
     }
 
     val isRunning = state.status == TimerStatus.RUNNING
-    val canSwipe = state.status == TimerStatus.IDLE || state.status == TimerStatus.PAUSED
+    val canSwipe =
+        (state.status == TimerStatus.IDLE || state.status == TimerStatus.PAUSED) &&
+            !state.awaitingDecision
 
     // Infinite carousel: a huge virtual page count starting in the middle; the real project index
     // is page % size, so swiping past the ends wraps around instead of hitting a boundary.
@@ -249,7 +252,9 @@ fun MainScreen(
                     onReset = { if (isActive) viewModel.onReset() },
                     onSeek = { if (isActive) viewModel.onSeek(it) },
                     onChangePhase = { if (isActive) viewModel.onChangePhase() },
-                    onChooseProject = { if (!isRunning) showProjectPicker = true }
+                    onChooseProject = {
+                        if (!isRunning && !state.awaitingDecision) showProjectPicker = true
+                    }
                 )
             )
         }
@@ -313,7 +318,7 @@ fun MainScreen(
             modifier = Modifier.fillMaxSize()
         )
 
-        if (showProjectPicker && !isRunning) {
+        if (showProjectPicker && !isRunning && !state.awaitingDecision) {
             ProjectPickerDialog(
                 projects = projects,
                 recentStartCounts = recentStartCounts,
@@ -327,7 +332,86 @@ fun MainScreen(
                 }
             )
         }
+
+        if (state.awaitingDecision) {
+            PhaseEndDecisionDialog(
+                state = state,
+                onContinue = viewModel::onAcceptPhaseEnd,
+                onExtend = viewModel::onExtendPhase
+            )
+        }
     }
+}
+
+@Composable
+private fun PhaseEndDecisionDialog(
+    state: TimerState,
+    onContinue: () -> Unit,
+    onExtend: (Int) -> Unit
+) {
+    val finishedWork = state.phase == Phase.POMODORO
+    val title = stringResource(
+        if (finishedWork) R.string.phase_end_work_title else R.string.phase_end_break_title
+    )
+    val continueLabel = stringResource(
+        if (finishedWork) R.string.phase_end_start_break else R.string.phase_end_return_to_work
+    )
+    val activityName = state.project?.name.orEmpty()
+    val phaseEmoji = if (finishedWork) "💼" else "☕"
+
+    AlertDialog(
+        onDismissRequest = { /* A phase-end decision is required. */ },
+        icon = {
+            Text(
+                text = phaseEmoji,
+                fontSize = 56.sp
+            )
+        },
+        title = {
+            Text(
+                text = title,
+                fontWeight = FontWeight.Bold
+            )
+        },
+        text = {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                if (activityName.isNotBlank()) {
+                    Text(
+                        text = activityName,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                    Spacer(Modifier.height(8.dp))
+                }
+                Text(
+                    text = stringResource(R.string.phase_end_question),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(Modifier.height(18.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    listOf(5, 10, 15).forEach { minutes ->
+                        TextButton(onClick = { onExtend(minutes) }) {
+                            Text("+$minutes " + stringResource(R.string.minutes_unit))
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = onContinue,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(continueLabel)
+            }
+        }
+    )
 }
 
 /** What a carousel page can do; they always travel together, so they travel as one. */
