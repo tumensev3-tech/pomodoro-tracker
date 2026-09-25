@@ -171,7 +171,8 @@ fun MainScreen(
     val isRunning = state.status == TimerStatus.RUNNING
     val canSwipe =
         (state.status == TimerStatus.IDLE || state.status == TimerStatus.PAUSED) &&
-            !state.awaitingDecision
+            !state.awaitingDecision &&
+            !freeTimer.running
 
     // Infinite carousel: a huge virtual page count starting in the middle; the real project index
     // is page % size, so swiping past the ends wraps around instead of hitting a boundary.
@@ -261,7 +262,9 @@ fun MainScreen(
                     onSeek = { if (isActive) viewModel.onSeek(it) },
                     onChangePhase = { if (isActive) viewModel.onChangePhase() },
                     onChooseProject = {
-                        if (!isRunning && !state.awaitingDecision) showProjectPicker = true
+                        if (!isRunning && !state.awaitingDecision && !freeTimer.running) {
+                            showProjectPicker = true
+                        }
                     }
                 )
             )
