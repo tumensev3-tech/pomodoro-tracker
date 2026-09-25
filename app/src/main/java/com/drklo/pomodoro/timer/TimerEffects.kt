@@ -142,17 +142,21 @@ class TimerEffects(context: Context) : PhaseFeedback {
             300L,
             900L
         )
-        private const val CALL_PULSE_MS = 200L
-        private const val CALL_PAUSE_MS = 180L
-        private const val CALL_CYCLES = 316
+        private const val CALL_PULSE_MS = 120L
+        private const val CALL_INTRA_PAUSE_MS = 100L
+        private const val CALL_GROUP_PAUSE_MS = 550L
+        private const val CALL_GROUPS = 135
+        private const val CALL_GROUP_PARTS = 4
 
-        // About two minutes of short, frequent pulses. Long buzzes blend into the background;
-        // this staccato pattern is intentionally easier to identify without looking at the phone.
-        val CALL_PATTERN_MS = LongArray(1 + CALL_CYCLES * 2) { index ->
+        // About two minutes of "tap-tap ... tap-tap" vibration. Two very short pulses are easier
+        // to recognise than a long buzz and the longer gap keeps the pattern from blending together.
+        val CALL_PATTERN_MS = LongArray(1 + CALL_GROUPS * CALL_GROUP_PARTS) { index ->
             when {
                 index == 0 -> 0L
-                index % 2 == 1 -> CALL_PULSE_MS
-                else -> CALL_PAUSE_MS
+                (index - 1) % CALL_GROUP_PARTS == 0 -> CALL_PULSE_MS
+                (index - 1) % CALL_GROUP_PARTS == 1 -> CALL_INTRA_PAUSE_MS
+                (index - 1) % CALL_GROUP_PARTS == 2 -> CALL_PULSE_MS
+                else -> CALL_GROUP_PAUSE_MS
             }
         }
     }
