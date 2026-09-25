@@ -14,7 +14,7 @@ enum class ActivitySessionKind {
 }
 
 interface ActivitySessionStore {
-    override suspend fun record(
+    suspend fun record(
         name: String,
         kind: ActivitySessionKind,
         projectId: Long?,
@@ -29,7 +29,7 @@ class ActivitySessionRepository(db: AppDatabase) : ActivitySessionStore {
 
     private val dao: ActivitySessionDao = db.activitySessionDao()
 
-    suspend fun record(
+    override suspend fun record(
         name: String,
         kind: ActivitySessionKind,
         projectId: Long?,
