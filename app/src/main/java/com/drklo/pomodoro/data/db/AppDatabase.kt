@@ -12,7 +12,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         PomodoroLogEntity::class,
         ActivitySessionEntity::class
     ],
-    version = 4,
+    version = 5,
     // Schemas are exported to app/schemas and committed: without them migrations cannot be tested.
     exportSchema = true
 )
@@ -28,6 +28,7 @@ abstract class AppDatabase : RoomDatabase() {
         private const val VERSION_2 = 2
         private const val VERSION_3 = 3
         private const val VERSION_4 = 4
+        private const val VERSION_5 = 5
 
         /** v2 adds the pomodoro_log table for statistics. */
         val MIGRATION_1_2 = object : Migration(1, 2) {
@@ -68,6 +69,15 @@ abstract class AppDatabase : RoomDatabase() {
                         "endEpochMs INTEGER NOT NULL, " +
                         "durationSeconds INTEGER NOT NULL, " +
                         "dayKey TEXT NOT NULL)"
+                )
+            }
+        }
+
+        /** v5 stores a semantic pictogram key for each activity. */
+        val MIGRATION_4_5 = object : Migration(VERSION_4, VERSION_5) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    "ALTER TABLE projects ADD COLUMN iconName TEXT NOT NULL DEFAULT 'NONE'"
                 )
             }
         }
