@@ -129,13 +129,18 @@ class TimerEffects(context: Context) : PhaseFeedback {
 
         // Waveforms alternate pause / vibration, starting immediately with the leading zero.
         val MEDIUM_PATTERN_MS = longArrayOf(
-            0L, 700L,
-            250L, 700L
+            0L,
+            700L,
+            250L,
+            700L
         )
         val LONG_PATTERN_MS = longArrayOf(
-            0L, 900L,
-            300L, 900L,
-            300L, 900L
+            0L,
+            900L,
+            300L,
+            900L,
+            300L,
+            900L
         )
         private const val CALL_PULSE_MS = 900L
         private const val CALL_PAUSE_MS = 450L
