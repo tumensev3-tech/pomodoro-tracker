@@ -73,11 +73,11 @@ import com.drklo.pomodoro.data.model.TimerStatus
 import com.drklo.pomodoro.timer.TimerState
 import com.drklo.pomodoro.timer.formatMmSs
 import com.drklo.pomodoro.ui.ViewModelFactories
+import com.drklo.pomodoro.ui.common.symbol
 import com.drklo.pomodoro.ui.main.components.Fanfare
 import com.drklo.pomodoro.ui.main.components.PausedBookmark
 import com.drklo.pomodoro.ui.main.components.SessionBullets
 import com.drklo.pomodoro.ui.main.components.TimerDial
-import com.drklo.pomodoro.ui.common.symbol
 import com.drklo.pomodoro.ui.theme.DefaultPomodoroColor
 import com.drklo.pomodoro.ui.theme.PomodoroTheme
 import com.drklo.pomodoro.util.findActivity
