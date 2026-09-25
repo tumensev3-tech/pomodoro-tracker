@@ -118,7 +118,7 @@
     <string name="vibration_short">Короткая</string>
     <string name="vibration_medium">Средняя</string>
     <string name="vibration_long">Длинная</string>
-    <string name="vibration_call">Звонок (2 мин)</string>
+    <string name="vibration_call">Частые импульсы (2 мин)</string>
     <string name="setting_always_on">Не гасить экран</string>
     <string name="setting_idle_alert">Алерт при простое</string>
     <string name="setting_idle_alert_summary">Менять цвета экрана каждые N мин при простое (только при включённом экране)</string>
