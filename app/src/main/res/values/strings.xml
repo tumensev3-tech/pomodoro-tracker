@@ -23,6 +23,17 @@
     <string name="notif_extend_10">+10 min</string>
     <string name="notif_extend_15">+15 min</string>
 
+    <!-- Free timer -->
+    <string name="free_timer_title">Free timer</string>
+    <string name="free_timer_name_label">Activity name</string>
+    <string name="free_timer_start">Start</string>
+    <string name="free_timer_stop">Stop</string>
+    <string name="free_timer_open">Free timer</string>
+    <string name="free_timer_running">Elapsed time</string>
+    <string name="free_timer_channel_name">Free timer</string>
+    <string name="free_timer_channel_desc">Keeps an open-ended activity timer running in the background</string>
+    <string name="free_timer_notification_title">Free timer</string>
+
     <!-- Main screen -->
     <string name="minutes_short">MIN</string>
     <string name="action_reset">Reset</string>
