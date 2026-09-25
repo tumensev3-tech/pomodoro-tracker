@@ -9,6 +9,9 @@ import com.drklo.pomodoro.data.model.Project
 import com.drklo.pomodoro.data.model.TimerStatus
 import com.drklo.pomodoro.data.repository.ProjectStore
 import com.drklo.pomodoro.data.repository.ProjectUsageRepository
+import com.drklo.pomodoro.timer.FreeTimerEngine
+import com.drklo.pomodoro.timer.FreeTimerService
+import com.drklo.pomodoro.timer.FreeTimerState
 import com.drklo.pomodoro.timer.SettingsSource
 import com.drklo.pomodoro.timer.TimerEngine
 import com.drklo.pomodoro.timer.TimerEvent
@@ -24,12 +27,14 @@ import kotlinx.coroutines.flow.stateIn
 class MainViewModel(
     app: Application,
     private val engine: TimerEngine,
+    private val freeTimerEngine: FreeTimerEngine,
     projectStore: ProjectStore,
     private val usageRepository: ProjectUsageRepository,
     settingsSource: SettingsSource
 ) : AndroidViewModel(app) {
 
     val timerState: StateFlow<TimerState> = engine.state
+    val freeTimerState: StateFlow<FreeTimerState> = freeTimerEngine.state
 
     val projects: StateFlow<List<Project>> = projectStore.projects
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
@@ -96,6 +101,7 @@ class MainViewModel(
     }
 
     fun onPlayPause() {
+        if (freeTimerEngine.state.value.running) return
         val wasIdle = engine.state.value.status == TimerStatus.IDLE
         engine.togglePlayPause()
         if (wasIdle && engine.state.value.status == TimerStatus.RUNNING) {
@@ -108,6 +114,18 @@ class MainViewModel(
 
     fun onReset() {
         engine.reset()
+    }
+
+    fun startFreeTimer(name: String): Boolean {
+        val normalTimer = engine.state.value
+        if (normalTimer.status != TimerStatus.IDLE || normalTimer.awaitingDecision) return false
+        val started = freeTimerEngine.start(name)
+        if (started) FreeTimerService.start(getApplication())
+        return started
+    }
+
+    fun stopFreeTimer() {
+        freeTimerEngine.stop()
     }
 
     fun onAcceptPhaseEnd() {
@@ -133,6 +151,7 @@ class MainViewModel(
         val list = projects.value
         val project = list.getOrNull(index) ?: return
         val status = engine.state.value.status
+        if (freeTimerEngine.state.value.running) return
         if (status == TimerStatus.RUNNING || status == TimerStatus.PAUSED) return
         if (project.id == engine.state.value.project?.id) return
         engine.setActiveProject(project)
