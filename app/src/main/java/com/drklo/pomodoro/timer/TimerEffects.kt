@@ -142,12 +142,12 @@ class TimerEffects(context: Context) : PhaseFeedback {
             300L,
             900L
         )
-        private const val CALL_PULSE_MS = 900L
-        private const val CALL_PAUSE_MS = 450L
-        private const val CALL_CYCLES = 89
+        private const val CALL_PULSE_MS = 200L
+        private const val CALL_PAUSE_MS = 180L
+        private const val CALL_CYCLES = 316
 
-        // About two minutes of incoming-call-style vibration. A manual start replaces this
-        // waveform with the normal short acknowledgement, so starting the next phase stops it.
+        // About two minutes of short, frequent pulses. Long buzzes blend into the background;
+        // this staccato pattern is intentionally easier to identify without looking at the phone.
         val CALL_PATTERN_MS = LongArray(1 + CALL_CYCLES * 2) { index ->
             when {
                 index == 0 -> 0L
