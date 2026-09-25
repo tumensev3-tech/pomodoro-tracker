@@ -13,7 +13,19 @@ enum class ActivitySessionKind {
     BREAK
 }
 
-class ActivitySessionRepository(db: AppDatabase) {
+interface ActivitySessionStore {
+    override suspend fun record(
+        name: String,
+        kind: ActivitySessionKind,
+        projectId: Long?,
+        startEpochMs: Long,
+        endEpochMs: Long,
+        durationSeconds: Int,
+        dayKey: String
+    )
+}
+
+class ActivitySessionRepository(db: AppDatabase) : ActivitySessionStore {
 
     private val dao: ActivitySessionDao = db.activitySessionDao()
 
