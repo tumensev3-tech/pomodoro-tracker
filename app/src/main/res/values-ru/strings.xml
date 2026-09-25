@@ -23,6 +23,17 @@
     <string name="notif_extend_10">+10 мин</string>
     <string name="notif_extend_15">+15 мин</string>
 
+    <!-- Свободный таймер -->
+    <string name="free_timer_title">Свободный таймер</string>
+    <string name="free_timer_name_label">Название занятия</string>
+    <string name="free_timer_start">Старт</string>
+    <string name="free_timer_stop">Стоп</string>
+    <string name="free_timer_open">Свободный таймер</string>
+    <string name="free_timer_running">Прошло времени</string>
+    <string name="free_timer_channel_name">Свободный таймер</string>
+    <string name="free_timer_channel_desc">Сохраняет таймер занятия при работе в фоне и блокировке экрана</string>
+    <string name="free_timer_notification_title">Свободный таймер</string>
+
     <!-- Main screen -->
     <string name="minutes_short">МИН</string>
     <string name="action_reset">Сброс</string>
