@@ -67,6 +67,10 @@ class TimerEngine(
     /** Monotonic (elapsedRealtime) deadline at which the running phase reaches zero. */
     private var deadlineElapsed: Long = 0L
 
+    /** Snapshot of the actual phase-end moment while the user is choosing Continue vs +5/+10/+15. */
+    private var pendingEndDayKey: String? = null
+    private var pendingEndWallClockMs: Long? = null
+
     /** Serializes database work: a read must not overtake a write that was queued before it. */
     private val statsMutex = Mutex()
 
@@ -93,7 +97,7 @@ class TimerEngine(
      * (carousel F-008); switching away from a paused interval discards it.
      */
     fun setActiveProject(project: Project): Unit = synchronized(lock) {
-        if (_state.value.status == TimerStatus.RUNNING) return
+        if (_state.value.status == TimerStatus.RUNNING || _state.value.awaitingDecision) return
         selectProject(project)
     }
 
@@ -119,6 +123,9 @@ class TimerEngine(
         _state.value = when (s.status) {
             TimerStatus.RUNNING, TimerStatus.PAUSED -> s.copy(project = updated)
             TimerStatus.IDLE -> {
+                if (s.awaitingDecision) return@synchronized run {
+                    _state.value = s.copy(project = updated)
+                }
                 val total = updated.durationSecondsFor(s.phase)
                 // Room re-emits the whole project list whenever any row changes, so editing a
                 // *different* project used to silently undo a scrub here. Only a duration that
@@ -133,6 +140,7 @@ class TimerEngine(
     }
 
     fun togglePlayPause(): Unit = synchronized(lock) {
+        if (_state.value.awaitingDecision) return
         when (_state.value.status) {
             TimerStatus.IDLE -> start(userInitiated = true)
             TimerStatus.RUNNING -> pause()
@@ -146,12 +154,15 @@ class TimerEngine(
         val project = s.project ?: return
         supersedeTick()
         stopIdleAlert()
+        effects.cancelVibration()
+        clearPendingPhaseEnd()
         val total = project.durationSecondsFor(s.phase)
         _state.value = s.copy(
             status = TimerStatus.IDLE,
             totalSeconds = total,
             remainingSeconds = total,
             awaitingNext = false,
+            awaitingDecision = false,
             idleAlertActive = false
         )
     }
@@ -168,7 +179,7 @@ class TimerEngine(
     fun refreshForNewDayIfNeeded(): Unit = synchronized(lock) {
         val s = _state.value
         val project = s.project ?: return
-        if (s.status != TimerStatus.IDLE) return
+        if (s.status != TimerStatus.IDLE || s.awaitingDecision) return
         if (sessionDayKey != null && sessionDayKey == currentDayKey()) return
         stopIdleAlert()
         _state.value = if (s.awaitingNext || s.phase != Phase.POMODORO) {
@@ -178,6 +189,7 @@ class TimerEngine(
                 totalSeconds = total,
                 remainingSeconds = total,
                 awaitingNext = false,
+                awaitingDecision = false,
                 pomodorosSinceLongBreak = 0
             )
         } else {
@@ -194,7 +206,7 @@ class TimerEngine(
      */
     fun seek(fraction: Float): Unit = synchronized(lock) {
         val s = _state.value
-        if (s.project == null || s.totalSeconds <= 0) return
+        if (s.project == null || s.totalSeconds <= 0 || s.awaitingDecision) return
         val target = (fraction.coerceIn(0f, 1f) * s.totalSeconds).toInt().coerceIn(1, s.totalSeconds)
         if (s.status == TimerStatus.RUNNING) {
             deadlineElapsed = time.elapsedRealtimeMs() + target * MILLIS_PER_SECOND
@@ -205,10 +217,12 @@ class TimerEngine(
     /** Manually changes the phase type (F-021). Allowed while IDLE or PAUSED. */
     fun setPhase(phase: Phase): Unit = synchronized(lock) {
         val s = _state.value
-        if (s.status == TimerStatus.RUNNING) return
+        if (s.status == TimerStatus.RUNNING || s.awaitingDecision) return
         val project = s.project ?: return
         supersedeTick()
         stopIdleAlert()
+        effects.cancelVibration()
+        clearPendingPhaseEnd()
         val total = project.durationSecondsFor(phase)
         _state.value = s.copy(
             status = TimerStatus.IDLE,
@@ -216,6 +230,7 @@ class TimerEngine(
             totalSeconds = total,
             remainingSeconds = total,
             awaitingNext = false,
+            awaitingDecision = false,
             idleAlertActive = false
         )
     }
@@ -225,6 +240,8 @@ class TimerEngine(
     private fun selectProject(project: Project) {
         supersedeTick()
         stopIdleAlert()
+        effects.cancelVibration()
+        clearPendingPhaseEnd()
         val total = project.durationSecondsFor(Phase.POMODORO)
         _state.value = TimerState(
             status = TimerStatus.IDLE,
@@ -238,7 +255,7 @@ class TimerEngine(
 
     private fun start(userInitiated: Boolean) {
         val s = _state.value
-        if (s.project == null || s.remainingSeconds <= 0) return
+        if (s.project == null || s.remainingSeconds <= 0 || s.awaitingDecision) return
         stopIdleAlert()
         _state.value = runningFrom(s, userInitiated)
         startTicking()
@@ -257,6 +274,7 @@ class TimerEngine(
         return from.copy(
             status = TimerStatus.RUNNING,
             awaitingNext = false,
+            awaitingDecision = false,
             idleAlertActive = false
         )
     }
