@@ -36,4 +36,5 @@ interface PhaseFeedback {
     fun vibrate()
 
     fun vibrate(pattern: VibrationPattern) = vibrate()
+    fun cancelVibration() = Unit
 }
