@@ -71,15 +71,15 @@ class TimerService : Service() {
                 notificationManager().cancel(PHASE_END_NOTIFICATION_ID)
             }
             ACTION_EXTEND_5 -> {
-                engine.extendCurrentPhase(5)
+                engine.extendCurrentPhase(EXTEND_5_MINUTES)
                 notificationManager().cancel(PHASE_END_NOTIFICATION_ID)
             }
             ACTION_EXTEND_10 -> {
-                engine.extendCurrentPhase(10)
+                engine.extendCurrentPhase(EXTEND_10_MINUTES)
                 notificationManager().cancel(PHASE_END_NOTIFICATION_ID)
             }
             ACTION_EXTEND_15 -> {
-                engine.extendCurrentPhase(15)
+                engine.extendCurrentPhase(EXTEND_15_MINUTES)
                 notificationManager().cancel(PHASE_END_NOTIFICATION_ID)
             }
         }
@@ -322,6 +322,9 @@ class TimerService : Service() {
         private const val MIN_NOTIFICATION_INTERVAL_MS = 250L
 
         private const val MILLIS_PER_SECOND = 1000L
+        private const val EXTEND_5_MINUTES = 5
+        private const val EXTEND_10_MINUTES = 10
+        private const val EXTEND_15_MINUTES = 15
 
         /** Progress-bar resolution; finer steps would only mean more re-posts nobody can see. */
         private const val PROGRESS_STEPS = 100
