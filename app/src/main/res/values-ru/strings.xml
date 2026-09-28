@@ -59,6 +59,11 @@
     <string name="cd_reports">Отчёты</string>
     <string name="tab_tomatoes">Томаты</string>
     <string name="tab_projects">Проекты</string>
+    <string name="tab_actual_time">Время</string>
+    <string name="stat_actual_time">Фактическое время занятий</string>
+    <string name="chart_actual_activities">Время по занятиям · 7 дней</string>
+    <string name="actual_time_empty">Пока нет записанного времени</string>
+    <string name="actual_time_today">Сегодня: %1$s</string>
     <string name="stat_total">Всего</string>
     <string name="stat_today">Сегодня</string>
     <string name="stat_week">Неделя</string>
