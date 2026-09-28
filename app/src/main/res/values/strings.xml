@@ -37,6 +37,7 @@
     <!-- Main screen -->
     <string name="minutes_short">MIN</string>
     <string name="action_reset">Reset</string>
+    <string name="action_stop_activity">Stop</string>
     <string name="cd_settings">Settings</string>
     <string name="cd_play_pause">Play or pause</string>
     <string name="cd_choose_project">Choose activity from list</string>
