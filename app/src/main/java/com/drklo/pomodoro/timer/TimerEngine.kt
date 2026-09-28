@@ -6,6 +6,8 @@ import com.drklo.pomodoro.data.model.GlobalSettings
 import com.drklo.pomodoro.data.model.Phase
 import com.drklo.pomodoro.data.model.Project
 import com.drklo.pomodoro.data.model.TimerStatus
+import com.drklo.pomodoro.data.repository.ActivitySessionKind
+import com.drklo.pomodoro.data.repository.ActivitySessionStore
 import com.drklo.pomodoro.util.loggingExceptionHandler
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -40,7 +42,8 @@ class TimerEngine(
     private val effects: PhaseFeedback,
     private val time: TimeSource,
     private val scope: CoroutineScope =
-        CoroutineScope(SupervisorJob() + Dispatchers.Default + loggingExceptionHandler(TAG))
+        CoroutineScope(SupervisorJob() + Dispatchers.Default + loggingExceptionHandler(TAG)),
+    private val activitySessions: ActivitySessionStore? = null
 ) {
     private val _state = MutableStateFlow(TimerState())
     val state: StateFlow<TimerState> = _state.asStateFlow()
@@ -314,8 +317,19 @@ class TimerEngine(
         )
 
         if (settings.soundEnabled) effects.playEnd()
-        if (settings.vibrateEnabled) effects.vibrate(settings.vibrationPattern)
         _events.tryEmit(TimerEvent.PhaseFinished(finished.phase))
+        if (settings.vibrateEnabled) {
+            // Give Android's alert notification a short lead so its own wearable-visible buzz does
+            // not replace the longer in-app pattern. If the user reacts immediately, skip it.
+            scope.launch {
+                delay(WEARABLE_ALERT_LEAD_MS)
+                synchronized(lock) {
+                    if (_state.value.awaitingDecision && _state.value.phase == finished.phase) {
+                        effects.vibrate(settings.vibrationPattern)
+                    }
+                }
+            }
+        }
         startIdleAlert()
     }
 
@@ -340,6 +354,14 @@ class TimerEngine(
             finished
         }
 
+        persistActivitySession(
+            phase = finished.phase,
+            project = project,
+            dayKey = dayKey,
+            durationSeconds = finished.totalSeconds,
+            endEpochMs = endEpochMs
+        )
+
         val next = if (finished.phase == Phase.POMODORO) {
             afterPomodoro(normalized, project, dayKey, endEpochMs)
         } else {
@@ -357,6 +379,45 @@ class TimerEngine(
 
         _state.value = runningFrom(next, userInitiated = false)
         startTicking()
+    }
+
+    /**
+     * Ends the current running/paused activity immediately, records the actual time consumed and
+     * returns the same phase to its normal idle duration without auto-starting anything.
+     */
+    fun stopCurrentActivity(): Unit = synchronized(lock) {
+        val s = _state.value
+        val project = s.project ?: return
+        if (s.status == TimerStatus.IDLE || s.awaitingDecision) return
+
+        val remaining = if (s.status == TimerStatus.RUNNING) remainingFromDeadline() else s.remainingSeconds
+        val elapsed = (s.totalSeconds - remaining).coerceAtLeast(0)
+        val endEpochMs = time.wallClockMs()
+
+        supersedeTick()
+        stopIdleAlert()
+        effects.cancelVibration()
+        clearPendingPhaseEnd()
+
+        if (elapsed > 0) {
+            persistActivitySession(
+                phase = s.phase,
+                project = project,
+                dayKey = currentDayKey(),
+                durationSeconds = elapsed,
+                endEpochMs = endEpochMs
+            )
+        }
+
+        val normalTotal = project.durationSecondsFor(s.phase)
+        _state.value = s.copy(
+            status = TimerStatus.IDLE,
+            totalSeconds = normalTotal,
+            remainingSeconds = normalTotal,
+            awaitingNext = false,
+            awaitingDecision = false,
+            idleAlertActive = false
+        )
     }
 
     /** Continue the phase that just ended, preserving its accumulated duration for statistics. */
@@ -528,6 +589,30 @@ class TimerEngine(
         }
     }
 
+    private fun persistActivitySession(
+        phase: Phase,
+        project: Project,
+        dayKey: String,
+        durationSeconds: Int,
+        endEpochMs: Long
+    ) {
+        val store = activitySessions ?: return
+        if (durationSeconds <= 0) return
+        val startEpochMs = endEpochMs - durationSeconds * MILLIS_PER_SECOND
+        val isWork = phase == Phase.POMODORO
+        launchStats("record actual activity time") {
+            store.record(
+                name = if (isWork) project.name else BREAK_ACTIVITY_NAME,
+                kind = if (isWork) ActivitySessionKind.WORK else ActivitySessionKind.BREAK,
+                projectId = project.id,
+                startEpochMs = startEpochMs,
+                endEpochMs = endEpochMs,
+                durationSeconds = durationSeconds,
+                dayKey = dayKey
+            )
+        }
+    }
+
     private fun persistCompletedPomodoro(
         project: Project,
         dayKey: String,
@@ -572,5 +657,7 @@ class TimerEngine(
         const val SECONDS_PER_MINUTE = 60
         const val IDLE_STROBE_BLINKS = 3
         const val IDLE_STROBE_HALF_MS = 320L
+        const val WEARABLE_ALERT_LEAD_MS = 600L
+        const val BREAK_ACTIVITY_NAME = "Домашние дела"
     }
 }
