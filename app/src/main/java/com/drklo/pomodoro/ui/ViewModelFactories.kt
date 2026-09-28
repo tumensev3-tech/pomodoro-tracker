@@ -42,6 +42,7 @@ object ViewModelFactories {
             ReportsViewModel(
                 projectStore = app.container.projectRepository,
                 statsRepository = app.container.statsRepository,
+                activitySessionRepository = app.container.activitySessionRepository,
                 settingsSource = app.container.settingsRepository
             )
         }
