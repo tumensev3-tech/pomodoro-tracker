@@ -63,6 +63,7 @@ class ProjectPageLandscapeTest {
                 actions = PageActions(
                     onTap = {},
                     onReset = {},
+                    onStop = {},
                     onSeek = {},
                     onChangePhase = {},
                     onChooseProject = {}
