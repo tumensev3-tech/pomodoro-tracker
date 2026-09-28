@@ -66,6 +66,10 @@ class TimerService : Service() {
         when (intent?.action) {
             ACTION_TOGGLE -> engine.togglePlayPause()
             ACTION_RESET -> engine.reset()
+            ACTION_STOP_ACTIVITY -> {
+                engine.stopCurrentActivity()
+                notificationManager().cancel(PHASE_END_NOTIFICATION_ID)
+            }
             ACTION_ACCEPT_PHASE_END -> {
                 engine.acceptPhaseEnd()
                 notificationManager().cancel(PHASE_END_NOTIFICATION_ID)
@@ -200,6 +204,11 @@ class TimerService : Service() {
                 localized.getString(R.string.notif_reset),
                 actionPendingIntent(ACTION_RESET)
             )
+            builder.addAction(
+                R.drawable.ic_notif_reset,
+                localized.getString(R.string.action_stop_activity),
+                actionPendingIntent(ACTION_STOP_ACTIVITY)
+            )
         }
 
         return builder.build()
@@ -287,9 +296,11 @@ class TimerService : Service() {
             description = localized.getString(R.string.phase_alert_channel_desc)
             setShowBadge(true)
             lockscreenVisibility = Notification.VISIBILITY_PUBLIC
-            // The app already runs the selected long vibration waveform itself. Disabling the
-            // phone-side channel vibration avoids Android replacing that waveform with a short buzz.
-            enableVibration(false)
+            // This short alert is intentionally a real vibrating notification: Samsung Wearable
+            // mirrors alerting app notifications to Galaxy Fit2 much more reliably than silent ones.
+            // TimerEngine starts the longer custom phone pattern a moment later.
+            enableVibration(true)
+            vibrationPattern = PHASE_ALERT_VIBRATION_PATTERN
             setSound(null, null)
         }
         notificationManager().createNotificationChannel(phaseAlertChannel)
@@ -314,7 +325,7 @@ class TimerService : Service() {
 
     companion object {
         private const val CHANNEL_ID = "timer_channel"
-        private const val PHASE_ALERT_CHANNEL_ID = "phase_alert_channel_v1"
+        private const val PHASE_ALERT_CHANNEL_ID = "phase_alert_channel_v2"
         private const val NOTIFICATION_ID = 1001
         private const val PHASE_END_NOTIFICATION_ID = 1002
 
@@ -325,11 +336,20 @@ class TimerService : Service() {
         private const val EXTEND_5_MINUTES = 5
         private const val EXTEND_10_MINUTES = 10
         private const val EXTEND_15_MINUTES = 15
+        private const val WEARABLE_ALERT_PULSE_MS = 120L
+        private const val WEARABLE_ALERT_GAP_MS = 100L
+        private val PHASE_ALERT_VIBRATION_PATTERN = longArrayOf(
+            0L,
+            WEARABLE_ALERT_PULSE_MS,
+            WEARABLE_ALERT_GAP_MS,
+            WEARABLE_ALERT_PULSE_MS
+        )
 
         /** Progress-bar resolution; finer steps would only mean more re-posts nobody can see. */
         private const val PROGRESS_STEPS = 100
         private const val ACTION_TOGGLE = "com.drklo.pomodoro.action.TOGGLE"
         private const val ACTION_RESET = "com.drklo.pomodoro.action.RESET"
+        private const val ACTION_STOP_ACTIVITY = "com.drklo.pomodoro.action.STOP_ACTIVITY"
         private const val ACTION_ACCEPT_PHASE_END = "com.drklo.pomodoro.action.ACCEPT_PHASE_END"
         private const val ACTION_EXTEND_5 = "com.drklo.pomodoro.action.EXTEND_5"
         private const val ACTION_EXTEND_10 = "com.drklo.pomodoro.action.EXTEND_10"
