@@ -257,6 +257,7 @@ fun MainScreen(
                         } else if (pausedProject != null) shakeTrigger++
                     },
                     onReset = { if (isActive) viewModel.onReset() },
+                    onStop = { if (isActive) viewModel.onStopActivity() },
                     onSeek = { if (isActive) viewModel.onSeek(it) },
                     onChangePhase = { if (isActive) viewModel.onChangePhase() },
                     onChooseProject = {
@@ -475,6 +476,7 @@ private fun PhaseEndDecisionDialog(
 internal data class PageActions(
     val onTap: () -> Unit,
     val onReset: () -> Unit,
+    val onStop: () -> Unit,
     val onSeek: (Float) -> Unit,
     val onChangePhase: () -> Unit,
     val onChooseProject: () -> Unit
@@ -645,6 +647,7 @@ internal fun ProjectPage(
 ) {
     val onTap = actions.onTap
     val onReset = actions.onReset
+    val onStop = actions.onStop
     val onSeek = actions.onSeek
     val onChangePhase = actions.onChangePhase
     val onChooseProject = actions.onChooseProject
@@ -693,6 +696,7 @@ internal fun ProjectPage(
     }
     val canChangePhase = isActive && status != TimerStatus.RUNNING
     val showReset = isActive && status == TimerStatus.PAUSED
+    val showStop = isActive && (status == TimerStatus.RUNNING || status == TimerStatus.PAUSED)
 
     // Accessibility for the dial (F-R0-01). It is the app's primary control — tap to start or
     // pause — but it is built from raw pointer input over a Canvas, so without this a screen reader
@@ -782,18 +786,29 @@ internal fun ProjectPage(
             }
         }
 
-        // Small reset label at the bottom, visible only while paused (F-020, reference UX).
-        if (showReset) {
-            Text(
-                text = stringResource(R.string.action_reset),
-                color = fg.copy(alpha = 0.7f),
-                fontSize = 14.sp,
+        if (showReset || showStop) {
+            Row(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .navigationBarsPadding()
-                    .padding(bottom = 24.dp)
-                    .clickable { onReset() }
-            )
+                    .padding(bottom = 18.dp),
+                horizontalArrangement = Arrangement.spacedBy(22.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                if (showReset) {
+                    TextButton(onClick = onReset) {
+                        Text(
+                            text = stringResource(R.string.action_reset),
+                            color = fg.copy(alpha = 0.78f)
+                        )
+                    }
+                }
+                if (showStop) {
+                    Button(onClick = onStop) {
+                        Text(stringResource(R.string.action_stop_activity))
+                    }
+                }
+            }
         }
     }
 }
@@ -913,6 +928,7 @@ private fun ProjectPageLandscapePreview() {
             actions = PageActions(
                 onTap = {},
                 onReset = {},
+                onStop = {},
                 onSeek = {},
                 onChangePhase = {},
                 onChooseProject = {}
