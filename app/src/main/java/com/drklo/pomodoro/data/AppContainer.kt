@@ -46,7 +46,13 @@ class AppContainer(context: Context) {
 
     /** The single, app-wide timer instance (guarantees one active timer, F-003). */
     val timerEngine: TimerEngine by lazy {
-        TimerEngine(settingsRepository, statsRepository, timerEffects, SystemTimeSource)
+        TimerEngine(
+            settingsSource = settingsRepository,
+            stats = statsRepository,
+            effects = timerEffects,
+            time = SystemTimeSource,
+            activitySessions = activitySessionRepository
+        )
     }
 
     val freeTimerEngine: FreeTimerEngine by lazy {
