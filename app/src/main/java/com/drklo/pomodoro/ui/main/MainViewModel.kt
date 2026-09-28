@@ -117,6 +117,10 @@ class MainViewModel(
         engine.reset()
     }
 
+    fun onStopActivity() {
+        engine.stopCurrentActivity()
+    }
+
     fun startFreeTimer(name: String): Boolean {
         val normalTimer = engine.state.value
         if (normalTimer.status != TimerStatus.IDLE || normalTimer.awaitingDecision) return false
