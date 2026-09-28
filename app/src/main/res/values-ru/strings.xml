@@ -37,6 +37,7 @@
     <!-- Main screen -->
     <string name="minutes_short">МИН</string>
     <string name="action_reset">Сброс</string>
+    <string name="action_stop_activity">Стоп</string>
     <string name="cd_settings">Настройки</string>
     <string name="cd_play_pause">Старт или пауза</string>
     <string name="cd_choose_project">Выбрать активность из списка</string>
