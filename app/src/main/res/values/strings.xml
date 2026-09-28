@@ -61,6 +61,11 @@
     <string name="cd_reports">Reports</string>
     <string name="tab_tomatoes">Tomatoes</string>
     <string name="tab_projects">Projects</string>
+    <string name="tab_actual_time">Time</string>
+    <string name="stat_actual_time">Actual activity time</string>
+    <string name="chart_actual_activities">Activity time · last 7 days</string>
+    <string name="actual_time_empty">No recorded activity time yet</string>
+    <string name="actual_time_today">Today: %1$s</string>
     <string name="stat_total">Total</string>
     <string name="stat_today">Today</string>
     <string name="stat_week">Week</string>
