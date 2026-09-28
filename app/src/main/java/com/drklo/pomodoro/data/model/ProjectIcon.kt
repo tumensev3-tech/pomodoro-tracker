@@ -20,7 +20,30 @@ enum class ProjectIcon {
     MUSIC,
     SHOPPING,
     COFFEE,
-    CREATIVE;
+    CREATIVE,
+    PHONE,
+    MEETING,
+    WRITING,
+    EMAIL,
+    DOCUMENTS,
+    MONEY,
+    FAMILY,
+    CHILDREN,
+    CLEANING,
+    LAUNDRY,
+    DISHES,
+    GARDEN,
+    FOOD,
+    HEALTH,
+    MEDICINE,
+    SLEEP,
+    GAME,
+    TV,
+    PHOTO,
+    TRAVEL,
+    PET,
+    BICYCLE,
+    PLANTS;
 
     companion object {
         fun fromName(value: String?): ProjectIcon =
