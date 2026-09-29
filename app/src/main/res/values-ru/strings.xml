@@ -24,6 +24,8 @@
     <string name="notif_extend_15">+15 мин</string>
     <string name="wearable_reply_label">Ответить</string>
     <string name="wearable_reply_next">Дальше</string>
+    <string name="wearable_reply_break">Перерыв</string>
+    <string name="wearable_reply_work">Работа</string>
 
     <!-- Свободный таймер -->
     <string name="free_timer_title">Свободный таймер</string>
