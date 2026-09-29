@@ -249,6 +249,11 @@ class TimerService : Service() {
                 actionPendingIntent(ACTION_ACCEPT_PHASE_END)
             )
             .addAction(
+                R.drawable.ic_notif_reset,
+                localized.getString(R.string.action_stop_activity),
+                actionPendingIntent(ACTION_STOP_ACTIVITY)
+            )
+            .addAction(
                 R.drawable.ic_notif_play,
                 localized.getString(R.string.notif_extend_5),
                 actionPendingIntent(ACTION_EXTEND_5)
