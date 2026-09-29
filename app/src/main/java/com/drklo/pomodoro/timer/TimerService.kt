@@ -239,7 +239,7 @@ class TimerService : Service() {
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
 
-        val replyAction = wearableReplyAction()
+        val replyAction = wearableReplyAction(finishedWork)
         val sender = Person.Builder()
             .setName(localized.getString(R.string.app_name))
             .build()
@@ -297,9 +297,11 @@ class TimerService : Service() {
             .build()
     }
 
-    private fun wearableReplyAction(): NotificationCompat.Action {
+    private fun wearableReplyAction(finishedWork: Boolean): NotificationCompat.Action {
         val choices = arrayOf(
-            localized.getString(R.string.wearable_reply_next),
+            localized.getString(
+                if (finishedWork) R.string.wearable_reply_break else R.string.wearable_reply_work
+            ),
             localized.getString(R.string.notif_extend_5),
             localized.getString(R.string.notif_extend_10),
             localized.getString(R.string.notif_extend_15),
@@ -342,6 +344,7 @@ class TimerService : Service() {
 
         val handled = when (command) {
             "дальше", "продолжить", "перерыв", "работа",
+            "начатьперерыв", "вернутьсякработе",
             "next", "continue", "break", "work" -> {
                 engine.acceptPhaseEnd()
                 true
