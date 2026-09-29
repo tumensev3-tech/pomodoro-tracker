@@ -388,7 +388,12 @@ class TimerEngine(
     fun stopCurrentActivity(): Unit = synchronized(lock) {
         val s = _state.value
         val project = s.project ?: return
-        if (s.status == TimerStatus.IDLE || s.awaitingDecision) return
+
+        if (s.awaitingDecision) {
+            stopAfterFinishedPhase(s, project)
+            return@synchronized
+        }
+        if (s.status == TimerStatus.IDLE) return
 
         val remaining = if (s.status == TimerStatus.RUNNING) remainingFromDeadline() else s.remainingSeconds
         val elapsed = (s.totalSeconds - remaining).coerceAtLeast(0)
@@ -414,6 +419,53 @@ class TimerEngine(
             status = TimerStatus.IDLE,
             totalSeconds = normalTotal,
             remainingSeconds = normalTotal,
+            awaitingNext = false,
+            awaitingDecision = false,
+            idleAlertActive = false
+        )
+    }
+
+    /**
+     * The phase already reached zero, so Stop means "accept what I just finished, but do not start
+     * anything else". Work still counts as a completed pomodoro; a break is still recorded as
+     * "Домашние дела". The screen then returns to an idle work timer for the same project.
+     */
+    private fun stopAfterFinishedPhase(finished: TimerState, project: Project) {
+        effects.cancelVibration()
+        stopIdleAlert()
+
+        val dayKey = pendingEndDayKey ?: currentDayKey()
+        val endEpochMs = pendingEndWallClockMs ?: time.wallClockMs()
+        clearPendingPhaseEnd()
+
+        val rolledOverToNewDay = sessionDayKey != null && sessionDayKey != dayKey
+        sessionDayKey = dayKey
+        val normalized = if (rolledOverToNewDay) {
+            finished.copy(completedToday = 0, completedInSession = 0, pomodorosSinceLongBreak = 0)
+        } else {
+            finished
+        }
+
+        persistActivitySession(
+            phase = finished.phase,
+            project = project,
+            dayKey = dayKey,
+            durationSeconds = finished.totalSeconds,
+            endEpochMs = endEpochMs
+        )
+
+        val completed = if (finished.phase == Phase.POMODORO) {
+            afterPomodoro(normalized, project, dayKey, endEpochMs)
+        } else {
+            normalized
+        }
+
+        val focusTotal = project.durationSecondsFor(Phase.POMODORO)
+        _state.value = completed.copy(
+            status = TimerStatus.IDLE,
+            phase = Phase.POMODORO,
+            totalSeconds = focusTotal,
+            remainingSeconds = focusTotal,
             awaitingNext = false,
             awaitingDecision = false,
             idleAlertActive = false
