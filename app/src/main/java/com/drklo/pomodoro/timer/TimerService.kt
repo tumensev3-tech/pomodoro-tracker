@@ -9,6 +9,8 @@ import android.content.Context
 import android.content.Intent
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
+import androidx.core.app.Person
+import androidx.core.app.RemoteInput
 import com.drklo.pomodoro.MainActivity
 import com.drklo.pomodoro.PomodoroApp
 import com.drklo.pomodoro.R
@@ -65,6 +67,7 @@ class TimerService : Service() {
     @Suppress("LongMethod", "CyclomaticComplexMethod")
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
+            ACTION_WEARABLE_REPLY -> handleWearableReply(intent)
             ACTION_TOGGLE -> engine.togglePlayPause()
             ACTION_RESET -> engine.reset()
             ACTION_STOP_ACTIVITY -> {
@@ -234,13 +237,28 @@ class TimerService : Service() {
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
 
+        val replyAction = wearableReplyAction()
+        val sender = Person.Builder()
+            .setName(localized.getString(R.string.app_name))
+            .build()
+        val messageText = listOf(title, projectName)
+            .filter { it.isNotBlank() }
+            .joinToString(" · ")
+
         return NotificationCompat.Builder(this, PHASE_ALERT_CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_timer_notification)
             .setContentTitle(title)
             .setContentText(projectName)
             .setContentIntent(openIntent)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
-            .setCategory(NotificationCompat.CATEGORY_REMINDER)
+            // Fit2 exposes Quick responses for message-style notifications. Keeping the visual
+            // content identical while declaring a reply-capable message gives Samsung's bridge a
+            // chance to surface those replies on the band.
+            .setCategory(NotificationCompat.CATEGORY_MESSAGE)
+            .setStyle(
+                NotificationCompat.MessagingStyle(sender)
+                    .addMessage(messageText, System.currentTimeMillis(), sender)
+            )
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             // Finished-phase alerts must be bridgeable to Galaxy Fit2. Android does not bridge
             // ongoing notifications to paired wearables, so keep this as a normal alert.
@@ -248,6 +266,7 @@ class TimerService : Service() {
             .setLocalOnly(false)
             .setAutoCancel(false)
             .setOnlyAlertOnce(true)
+            .addAction(replyAction)
             .addAction(
                 R.drawable.ic_notif_play,
                 continueLabel,
@@ -274,6 +293,79 @@ class TimerService : Service() {
                 actionPendingIntent(ACTION_EXTEND_15)
             )
             .build()
+    }
+
+    private fun wearableReplyAction(): NotificationCompat.Action {
+        val choices = arrayOf(
+            localized.getString(R.string.wearable_reply_next),
+            localized.getString(R.string.notif_extend_5),
+            localized.getString(R.string.notif_extend_10),
+            localized.getString(R.string.notif_extend_15),
+            localized.getString(R.string.action_stop_activity)
+        )
+        val remoteInput = RemoteInput.Builder(KEY_WEARABLE_REPLY)
+            .setLabel(localized.getString(R.string.wearable_reply_label))
+            .setChoices(choices)
+            .build()
+        val intent = Intent(this, TimerService::class.java)
+            .setAction(ACTION_WEARABLE_REPLY)
+        val pendingIntent = PendingIntent.getService(
+            this,
+            WEARABLE_REPLY_REQUEST_CODE,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE
+        )
+        return NotificationCompat.Action.Builder(
+            R.drawable.ic_notif_play,
+            localized.getString(R.string.wearable_reply_label),
+            pendingIntent
+        )
+            .addRemoteInput(remoteInput)
+            .setAllowGeneratedReplies(true)
+            .setSemanticAction(NotificationCompat.Action.SEMANTIC_ACTION_REPLY)
+            .setShowsUserInterface(false)
+            .build()
+    }
+
+    private fun handleWearableReply(intent: Intent) {
+        val raw = RemoteInput.getResultsFromIntent(intent)
+            ?.getCharSequence(KEY_WEARABLE_REPLY)
+            ?.toString()
+            ?.trim()
+            .orEmpty()
+        val command = raw.lowercase()
+            .replace(" ", "")
+            .replace("мин.", "")
+            .replace("мин", "")
+
+        val handled = when (command) {
+            "дальше", "продолжить", "перерыв", "работа",
+            "next", "continue", "break", "work" -> {
+                engine.acceptPhaseEnd()
+                true
+            }
+            "+5", "5" -> {
+                engine.extendCurrentPhase(EXTEND_5_MINUTES)
+                true
+            }
+            "+10", "10" -> {
+                engine.extendCurrentPhase(EXTEND_10_MINUTES)
+                true
+            }
+            "+15", "15" -> {
+                engine.extendCurrentPhase(EXTEND_15_MINUTES)
+                true
+            }
+            "стоп", "stop" -> {
+                engine.stopCurrentActivity()
+                true
+            }
+            else -> false
+        }
+
+        if (handled) {
+            notificationManager().cancel(PHASE_END_NOTIFICATION_ID)
+        }
     }
 
     private fun actionPendingIntent(action: String): PendingIntent {
@@ -364,6 +456,9 @@ class TimerService : Service() {
         private const val ACTION_EXTEND_5 = "com.drklo.pomodoro.action.EXTEND_5"
         private const val ACTION_EXTEND_10 = "com.drklo.pomodoro.action.EXTEND_10"
         private const val ACTION_EXTEND_15 = "com.drklo.pomodoro.action.EXTEND_15"
+        private const val ACTION_WEARABLE_REPLY = "com.drklo.pomodoro.action.WEARABLE_REPLY"
+        private const val KEY_WEARABLE_REPLY = "pomodoro_wearable_reply"
+        private const val WEARABLE_REPLY_REQUEST_CODE = 2002
 
         fun start(context: Context) {
             context.startForegroundService(Intent(context, TimerService::class.java))
