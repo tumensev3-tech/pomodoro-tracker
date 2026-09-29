@@ -242,7 +242,10 @@ class TimerService : Service() {
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setCategory(NotificationCompat.CATEGORY_REMINDER)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-            .setOngoing(true)
+            // Finished-phase alerts must be bridgeable to Galaxy Fit2. Android does not bridge
+            // ongoing notifications to paired wearables, so keep this as a normal alert.
+            .setOngoing(false)
+            .setLocalOnly(false)
             .setAutoCancel(false)
             .setOnlyAlertOnce(true)
             .addAction(
