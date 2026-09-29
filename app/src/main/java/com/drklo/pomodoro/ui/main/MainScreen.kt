@@ -389,7 +389,8 @@ fun MainScreen(
             PhaseEndDecisionDialog(
                 state = state,
                 onContinue = viewModel::onAcceptPhaseEnd,
-                onExtend = viewModel::onExtendPhase
+                onExtend = viewModel::onExtendPhase,
+                onStop = viewModel::onStopActivity
             )
         }
     }
@@ -399,7 +400,8 @@ fun MainScreen(
 private fun PhaseEndDecisionDialog(
     state: TimerState,
     onContinue: () -> Unit,
-    onExtend: (Int) -> Unit
+    onExtend: (Int) -> Unit,
+    onStop: () -> Unit
 ) {
     val finishedWork = state.phase == Phase.POMODORO
     val title = stringResource(
@@ -466,6 +468,17 @@ private fun PhaseEndDecisionDialog(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(continueLabel)
+            }
+        },
+        dismissButton = {
+            TextButton(
+                onClick = onStop,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = stringResource(R.string.action_stop_activity),
+                    color = MaterialTheme.colorScheme.error
+                )
             }
         }
     )
