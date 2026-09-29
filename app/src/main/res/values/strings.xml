@@ -22,6 +22,8 @@
     <string name="notif_extend_5">+5 min</string>
     <string name="notif_extend_10">+10 min</string>
     <string name="notif_extend_15">+15 min</string>
+    <string name="wearable_reply_label">Reply</string>
+    <string name="wearable_reply_next">Next</string>
 
     <!-- Free timer -->
     <string name="free_timer_title">Free timer</string>
