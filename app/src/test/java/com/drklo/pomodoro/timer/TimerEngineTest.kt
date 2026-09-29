@@ -426,6 +426,48 @@ class TimerEngineTest {
     }
 
     @Test
+    fun `stop on finished work records it but does not start the break`() = runTest {
+        val h = harness()
+        h.engine.setActiveProject(work)
+        runCurrent()
+
+        runPomodoro(h)
+        assertTrue(h.state.awaitingDecision)
+
+        h.engine.stopCurrentActivity()
+        runCurrent()
+
+        assertEquals(TimerStatus.IDLE, h.state.status)
+        assertEquals(Phase.POMODORO, h.state.phase)
+        assertEquals(work.focusMinutes * 60, h.state.remainingSeconds)
+        assertEquals(1, h.stats.records.size)
+        assertEquals(1, h.state.completedToday)
+        assertTrue(!h.state.awaitingDecision)
+    }
+
+    @Test
+    fun `stop on finished break returns to idle work without creating another pomodoro`() = runTest {
+        val h = harness()
+        h.engine.setActiveProject(work)
+        runCurrent()
+
+        runPomodoro(h)
+        acceptPhaseEnd(h)
+        advance(work.shortBreakMinutes * 60_000L)
+        assertTrue(h.state.awaitingDecision)
+
+        h.engine.stopCurrentActivity()
+        runCurrent()
+
+        assertEquals(TimerStatus.IDLE, h.state.status)
+        assertEquals(Phase.POMODORO, h.state.phase)
+        assertEquals(work.focusMinutes * 60, h.state.remainingSeconds)
+        assertEquals(1, h.stats.records.size)
+        assertEquals(1, h.state.completedToday)
+        assertTrue(!h.state.awaitingDecision)
+    }
+
+    @Test
     fun `extending a finished phase keeps it as one longer interval`() = runTest {
         val h = harness()
         h.engine.setActiveProject(work)
