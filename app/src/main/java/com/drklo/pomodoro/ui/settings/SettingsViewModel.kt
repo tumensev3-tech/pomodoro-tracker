@@ -9,6 +9,7 @@ import com.drklo.pomodoro.data.model.AppLanguage
 import com.drklo.pomodoro.data.model.GlobalSettings
 import com.drklo.pomodoro.data.model.Project
 import com.drklo.pomodoro.data.model.ThemeMode
+import com.drklo.pomodoro.data.model.VibrationPattern
 import com.drklo.pomodoro.data.repository.BackupRepository
 import com.drklo.pomodoro.data.repository.ProjectStore
 import com.drklo.pomodoro.data.repository.SettingsRepository
@@ -48,6 +49,8 @@ class SettingsViewModel(
 
     fun setSound(value: Boolean) = launchSafely { settingsRepo.setSoundEnabled(value) }
     fun setVibrate(value: Boolean) = launchSafely { settingsRepo.setVibrateEnabled(value) }
+    fun setVibrationPattern(value: VibrationPattern) =
+        launchSafely { settingsRepo.setVibrationPattern(value) }
     fun setAlwaysOn(value: Boolean) = launchSafely { settingsRepo.setAlwaysOnDisplay(value) }
     fun setAutostartPomodoros(value: Boolean) = launchSafely { settingsRepo.setAutostartPomodoros(value) }
     fun setAutostartBreaks(value: Boolean) = launchSafely { settingsRepo.setAutostartBreaks(value) }

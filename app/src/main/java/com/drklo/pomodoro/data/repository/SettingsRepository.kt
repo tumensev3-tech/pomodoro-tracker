@@ -12,6 +12,7 @@ import androidx.datastore.preferences.preferencesDataStore
 import com.drklo.pomodoro.data.model.AppLanguage
 import com.drklo.pomodoro.data.model.GlobalSettings
 import com.drklo.pomodoro.data.model.ThemeMode
+import com.drklo.pomodoro.data.model.VibrationPattern
 import com.drklo.pomodoro.timer.SettingsSource
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
@@ -27,6 +28,7 @@ class SettingsRepository(private val context: Context) : SettingsSource {
     private object Keys {
         val SOUND = booleanPreferencesKey("sound_enabled")
         val VIBRATE = booleanPreferencesKey("vibrate_enabled")
+        val VIBRATION_PATTERN = stringPreferencesKey("vibration_pattern")
         val ALWAYS_ON = booleanPreferencesKey("always_on_display")
         val AUTOSTART = booleanPreferencesKey("autostart")
         val AUTOSTART_BREAKS = booleanPreferencesKey("autostart_breaks")
@@ -51,6 +53,7 @@ class SettingsRepository(private val context: Context) : SettingsSource {
         GlobalSettings(
             soundEnabled = p[Keys.SOUND] ?: defaults.soundEnabled,
             vibrateEnabled = p[Keys.VIBRATE] ?: defaults.vibrateEnabled,
+            vibrationPattern = VibrationPattern.fromName(p[Keys.VIBRATION_PATTERN]),
             alwaysOnDisplay = p[Keys.ALWAYS_ON] ?: defaults.alwaysOnDisplay,
             autostartPomodoros = p[Keys.AUTOSTART] ?: defaults.autostartPomodoros,
             autostartBreaks = p[Keys.AUTOSTART_BREAKS] ?: defaults.autostartBreaks,
@@ -72,6 +75,8 @@ class SettingsRepository(private val context: Context) : SettingsSource {
 
     suspend fun setSoundEnabled(value: Boolean) = edit { it[Keys.SOUND] = value }
     suspend fun setVibrateEnabled(value: Boolean) = edit { it[Keys.VIBRATE] = value }
+    suspend fun setVibrationPattern(value: VibrationPattern) =
+        edit { it[Keys.VIBRATION_PATTERN] = value.name }
     suspend fun setAlwaysOnDisplay(value: Boolean) = edit { it[Keys.ALWAYS_ON] = value }
     suspend fun setAutostartPomodoros(value: Boolean) = edit { it[Keys.AUTOSTART] = value }
     suspend fun setAutostartBreaks(value: Boolean) = edit { it[Keys.AUTOSTART_BREAKS] = value }

@@ -8,6 +8,7 @@ import com.drklo.pomodoro.data.db.DayStatEntity
 import com.drklo.pomodoro.data.db.PomodoroLogEntity
 import com.drklo.pomodoro.data.db.ProjectEntity
 import com.drklo.pomodoro.data.db.toDomain
+import com.drklo.pomodoro.data.model.ProjectIcon
 import com.drklo.pomodoro.data.model.ProjectLimits
 import java.io.Closeable
 import java.io.EOFException
@@ -109,6 +110,7 @@ object ProjectBackup {
                 json.name("longBreakMinutes").value(longBreakMinutes.toLong())
                 json.name("longBreakInterval").value(longBreakInterval.toLong())
                 json.name("orderIndex").value(orderIndex.toLong())
+                json.name("iconName").value(iconName)
                 // Carried so an archived project comes back archived: hidden from the list, still
                 // named and coloured in the reports its pomodoros appear in.
                 json.name("archivedAt").value(archivedAt)
@@ -242,6 +244,7 @@ object ProjectBackup {
         var longBreakMinutes = -1
         var longBreakInterval = -1
         var orderIndex = 0
+        var iconName = ProjectIcon.NONE.name
         var archivedAt: Long? = null
         val dayStats = mutableListOf<DayStatEntity>()
         val log = mutableListOf<PomodoroLogEntity>()
@@ -260,6 +263,7 @@ object ProjectBackup {
                 "longBreakMinutes" -> longBreakMinutes = nextInt(field)
                 "longBreakInterval" -> longBreakInterval = nextInt(field)
                 "orderIndex" -> orderIndex = nextInt(field)
+                "iconName" -> iconName = ProjectIcon.fromName(nextString(field)).name
                 "archivedAt" -> archivedAt = if (peek() == JsonToken.NULL) {
                     nextNull()
                     null
@@ -287,6 +291,7 @@ object ProjectBackup {
             longBreakMinutes = longBreakMinutes,
             longBreakInterval = longBreakInterval,
             orderIndex = orderIndex,
+            iconName = iconName,
             archivedAt = archivedAt
         )
         if (!ProjectLimits.accepts(entity.toDomain())) {

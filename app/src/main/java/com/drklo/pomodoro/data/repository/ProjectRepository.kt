@@ -7,6 +7,7 @@ import com.drklo.pomodoro.data.db.ProjectEntity
 import com.drklo.pomodoro.data.db.toDomain
 import com.drklo.pomodoro.data.db.toEntity
 import com.drklo.pomodoro.data.model.Project
+import com.drklo.pomodoro.data.model.ProjectIcon
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
@@ -77,7 +78,8 @@ private object DefaultProjects {
             pomodoroColor = 0xFFE53935.toInt(), breakColor = 0xFF43A047.toInt(),
             dailyGoal = 8,
             longBreakEnabled = true, longBreakMinutes = 20, longBreakInterval = 4,
-            orderIndex = 0
+            orderIndex = 0,
+            iconName = ProjectIcon.COMPUTER.name
         ),
         ProjectEntity(
             name = "Учёба",
@@ -86,7 +88,8 @@ private object DefaultProjects {
             pomodoroColor = 0xFF1E88E5.toInt(), breakColor = 0xFF43A047.toInt(),
             dailyGoal = 3,
             longBreakEnabled = false, longBreakMinutes = 15, longBreakInterval = 4,
-            orderIndex = 1
+            orderIndex = 1,
+            iconName = ProjectIcon.STUDY.name
         ),
         ProjectEntity(
             name = "Чтение",
@@ -95,7 +98,8 @@ private object DefaultProjects {
             pomodoroColor = 0xFF8E24AA.toInt(), breakColor = 0xFFFB8C00.toInt(),
             dailyGoal = 2,
             longBreakEnabled = false, longBreakMinutes = 30, longBreakInterval = 4,
-            orderIndex = 2
+            orderIndex = 2,
+            iconName = ProjectIcon.BOOK.name
         )
     )
 }

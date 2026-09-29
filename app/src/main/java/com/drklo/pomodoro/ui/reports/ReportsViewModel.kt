@@ -6,18 +6,25 @@ import com.drklo.pomodoro.data.LogicalDay
 import com.drklo.pomodoro.data.model.GlobalSettings
 import com.drklo.pomodoro.data.model.PomodoroLog
 import com.drklo.pomodoro.data.model.Project
+import com.drklo.pomodoro.data.repository.ActivitySessionRepository
 import com.drklo.pomodoro.data.repository.ProjectStore
 import com.drklo.pomodoro.data.repository.StatsRepository
 import com.drklo.pomodoro.timer.SettingsSource
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import java.time.LocalDate
 import java.time.LocalDateTime
 
 /** Aggregated totals shown in the header rows of both report tabs. */
+data class ActivityTimeTotal(
+    val name: String,
+    val todaySeconds: Int,
+    val weekSeconds: Int,
+    val totalSeconds: Int
+)
+
 data class ReportsSummary(
     val totalFocusSec: Int = 0,
     val todayFocusSec: Int = 0,
@@ -30,6 +37,7 @@ data class ReportsSummary(
 class ReportsViewModel(
     projectStore: ProjectStore,
     statsRepository: StatsRepository,
+    activitySessionRepository: ActivitySessionRepository,
     settingsSource: SettingsSource
 ) : ViewModel() {
 
@@ -37,6 +45,9 @@ class ReportsViewModel(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     val logs: StateFlow<List<PomodoroLog>> = statsRepository.observeLog()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    private val activitySessions = activitySessionRepository.observeAll()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     private val settings: StateFlow<GlobalSettings> = settingsSource.settings
@@ -54,6 +65,27 @@ class ReportsViewModel(
     val today: StateFlow<LocalDate> = combine(settings, logs) { s, _ ->
         LogicalDay.dateFor(LocalDateTime.now(), s.dayEndHour, s.dayEndMinute)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), LocalDate.now())
+
+    val activityTotals: StateFlow<List<ActivityTimeTotal>> =
+        combine(activitySessions, today) { sessions, today ->
+            val todayKey = today.toString()
+            val weekKeys = (0..6).map { today.minusDays(it.toLong()).toString() }.toSet()
+            sessions
+                .groupBy { it.name }
+                .map { (name, rows) ->
+                    ActivityTimeTotal(
+                        name = name,
+                        todaySeconds = rows.filter { it.dayKey == todayKey }.sumOf { it.durationSeconds },
+                        weekSeconds = rows.filter { it.dayKey in weekKeys }.sumOf { it.durationSeconds },
+                        totalSeconds = rows.sumOf { it.durationSeconds }
+                    )
+                }
+                .sortedWith(
+                    compareByDescending<ActivityTimeTotal> { it.weekSeconds }
+                        .thenByDescending { it.totalSeconds }
+                        .thenBy { it.name }
+                )
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     val summary: StateFlow<ReportsSummary> =
         combine(logs, today) { log, today ->

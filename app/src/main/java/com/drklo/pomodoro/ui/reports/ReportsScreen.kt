@@ -55,6 +55,7 @@ fun ReportsScreen(
     val logs by viewModel.logs.collectAsStateWithLifecycle()
     val today by viewModel.today.collectAsStateWithLifecycle()
     val projects by viewModel.projects.collectAsStateWithLifecycle()
+    val activityTotals by viewModel.activityTotals.collectAsStateWithLifecycle()
     var tab by remember { mutableIntStateOf(0) }
 
     Scaffold(
@@ -72,8 +73,21 @@ fun ReportsScreen(
         Column(modifier = Modifier.fillMaxSize().padding(padding)) {
             // PrimaryTabRow, not the deprecated TabRow: these are the screen's top-level tabs.
             PrimaryTabRow(selectedTabIndex = tab) {
-                Tab(selected = tab == 0, onClick = { tab = 0 }, text = { Text(stringResource(R.string.tab_tomatoes)) })
-                Tab(selected = tab == 1, onClick = { tab = 1 }, text = { Text(stringResource(R.string.tab_projects)) })
+                Tab(
+                    selected = tab == 0,
+                    onClick = { tab = 0 },
+                    text = { Text(stringResource(R.string.tab_tomatoes)) }
+                )
+                Tab(
+                    selected = tab == 1,
+                    onClick = { tab = 1 },
+                    text = { Text(stringResource(R.string.tab_projects)) }
+                )
+                Tab(
+                    selected = tab == 2,
+                    onClick = { tab = 2 },
+                    text = { Text(stringResource(R.string.tab_actual_time)) }
+                )
             }
             Column(
                 modifier = Modifier
@@ -121,7 +135,7 @@ fun ReportsScreen(
                             summaryFormatter = { formatFocus(it.toInt(), hLabel, mLabel) }
                         )
                     }
-                    else -> {
+                    1 -> {
                         SummaryRow(
                             stringResource(R.string.stat_pomodoros),
                             stat(stringResource(R.string.stat_total), summary.totalPomodoros.toString()),
@@ -176,6 +190,72 @@ fun ReportsScreen(
                             valueOf = { 1f },
                             summaryFormatter = { it.roundToInt().toString() }
                         )
+                    }
+                    else -> {
+                        val total = activityTotals.sumOf { it.totalSeconds }
+                        val todaySeconds = activityTotals.sumOf { it.todaySeconds }
+                        val weekSeconds = activityTotals.sumOf { it.weekSeconds }
+                        SummaryRow(
+                            stringResource(R.string.stat_actual_time),
+                            stat(stringResource(R.string.stat_total), formatFocus(total, hLabel, mLabel)),
+                            stat(stringResource(R.string.stat_today), formatFocus(todaySeconds, hLabel, mLabel)),
+                            stat(stringResource(R.string.stat_week), formatFocus(weekSeconds, hLabel, mLabel))
+                        )
+                        ActivityTimeCard(
+                            totals = activityTotals,
+                            hLabel = hLabel,
+                            mLabel = mLabel
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ActivityTimeCard(
+    totals: List<ActivityTimeTotal>,
+    hLabel: String,
+    mLabel: String
+) {
+    ElevatedCard(modifier = Modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Text(
+                text = stringResource(R.string.chart_actual_activities),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold
+            )
+            if (totals.isEmpty()) {
+                Text(
+                    text = stringResource(R.string.actual_time_empty),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            } else {
+                totals.forEach { item ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = item.name,
+                            modifier = Modifier.weight(1f),
+                            fontWeight = FontWeight.Medium
+                        )
+                        Column(horizontalAlignment = Alignment.End) {
+                            Text(formatFocus(item.weekSeconds, hLabel, mLabel))
+                            Text(
+                                text = stringResource(
+                                    R.string.actual_time_today,
+                                    formatFocus(item.todaySeconds, hLabel, mLabel)
+                                ),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     }
                 }
             }
