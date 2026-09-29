@@ -617,6 +617,9 @@ class TimerEngineTest {
 
         advance(25 * 60_000L)
         assertEquals(1, h.feedback.ends)
+        // The long pattern deliberately waits 600 ms so the wearable-visible notification can
+        // vibrate first without being replaced by the app's own two-minute waveform.
+        advance(600)
         assertEquals(2, h.feedback.vibrations)
     }
 }
