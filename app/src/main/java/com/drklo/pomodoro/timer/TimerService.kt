@@ -62,6 +62,7 @@ class TimerService : Service() {
         createChannel()
     }
 
+    @Suppress("LongMethod", "CyclomaticComplexMethod")
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
             ACTION_TOGGLE -> engine.togglePlayPause()
@@ -138,6 +139,7 @@ class TimerService : Service() {
         super.onDestroy()
     }
 
+    @Suppress("LongMethod")
     private fun buildNotification(): Notification {
         val state = engine.state.value
         val phaseText = when (state.phase) {
