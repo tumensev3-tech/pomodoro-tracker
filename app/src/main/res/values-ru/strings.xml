@@ -23,7 +23,6 @@
     <string name="notif_extend_10">+10 мин</string>
     <string name="notif_extend_15">+15 мин</string>
     <string name="wearable_reply_label">Ответить</string>
-    <string name="wearable_reply_next">Дальше</string>
     <string name="wearable_reply_break">Перерыв</string>
     <string name="wearable_reply_work">Работа</string>
 
