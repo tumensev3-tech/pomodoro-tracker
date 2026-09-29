@@ -36,6 +36,7 @@ import kotlinx.coroutines.launch
  * hands over from one phase to the next without ever publishing an IDLE frame in between, so the
  * service that was already running simply keeps going.
  */
+@Suppress("TooManyFunctions")
 class TimerService : Service() {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
@@ -219,6 +220,7 @@ class TimerService : Service() {
         return builder.build()
     }
 
+    @Suppress("LongMethod")
     private fun buildPhaseEndNotification(finishedPhase: Phase): Notification {
         val state = engine.state.value
         val finishedWork = finishedPhase == Phase.POMODORO
