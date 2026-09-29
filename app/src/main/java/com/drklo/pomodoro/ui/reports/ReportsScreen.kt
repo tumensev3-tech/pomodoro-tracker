@@ -73,9 +73,21 @@ fun ReportsScreen(
         Column(modifier = Modifier.fillMaxSize().padding(padding)) {
             // PrimaryTabRow, not the deprecated TabRow: these are the screen's top-level tabs.
             PrimaryTabRow(selectedTabIndex = tab) {
-                Tab(selected = tab == 0, onClick = { tab = 0 }, text = { Text(stringResource(R.string.tab_tomatoes)) })
-                Tab(selected = tab == 1, onClick = { tab = 1 }, text = { Text(stringResource(R.string.tab_projects)) })
-                Tab(selected = tab == 2, onClick = { tab = 2 }, text = { Text(stringResource(R.string.tab_actual_time)) })
+                Tab(
+                    selected = tab == 0,
+                    onClick = { tab = 0 },
+                    text = { Text(stringResource(R.string.tab_tomatoes)) }
+                )
+                Tab(
+                    selected = tab == 1,
+                    onClick = { tab = 1 },
+                    text = { Text(stringResource(R.string.tab_projects)) }
+                )
+                Tab(
+                    selected = tab == 2,
+                    onClick = { tab = 2 },
+                    text = { Text(stringResource(R.string.tab_actual_time)) }
+                )
             }
             Column(
                 modifier = Modifier
