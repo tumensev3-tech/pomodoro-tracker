@@ -47,8 +47,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.pointer.PointerEventPass
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -182,16 +180,7 @@ fun MainScreen(
     val scope = rememberCoroutineScope()
 
     BoxWithConstraints(
-        modifier = modifier
-            .fillMaxSize()
-            .pointerInput(Unit) {
-                awaitPointerEventScope {
-                    while (true) {
-                        awaitPointerEvent(PointerEventPass.Initial)
-                        interactions.trySend(Unit)
-                    }
-                }
-            }
+        modifier = modifier.fillMaxSize()
     ) {
         // Measured here rather than read from LocalWindowInfo.containerSize. That value did not
         // change when the phone was turned: the activity handles the rotation itself
