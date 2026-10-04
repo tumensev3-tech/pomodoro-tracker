@@ -58,9 +58,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.view.WindowCompat
-import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -80,15 +77,11 @@ import com.drklo.pomodoro.ui.main.components.SessionBullets
 import com.drklo.pomodoro.ui.main.components.TimerDial
 import com.drklo.pomodoro.ui.theme.DefaultPomodoroColor
 import com.drklo.pomodoro.ui.theme.PomodoroTheme
-import com.drklo.pomodoro.util.findActivity
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withTimeoutOrNull
 
 /** Hide the system bars after this much inactivity on the main screen. */
-private const val IDLE_HIDE_MS = 3_000L
 private const val FREQUENT_PROJECT_LIMIT = 5
 private const val MIN_STARTS_FOR_FREQUENT = 3
 private val PHASE_EXTENSION_MINUTES = listOf(5, 10, 15)
@@ -125,39 +118,10 @@ fun MainScreen(
         onDispose { view.keepScreenOn = false }
     }
 
-    // Auto-hide system bars after inactivity so the Samsung nav buttons stop overlapping the
-    // top-right icons (especially in landscape). Any touch reveals them; edge-swipe shows transiently.
-    val window = view.context.findActivity()?.window
-    val insetsController = remember(window) {
-        window?.let { WindowCompat.getInsetsController(it, view) }?.apply {
-            systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-        }
-    }
-    var barsVisible by remember { mutableStateOf(true) }
-    // Touches are reported through a channel rather than a counter in state. A counter has to be
-    // read in composition to key the effect, so every pointer event — dozens a second during a drag
-    // — recomposed the whole screen, pager pages included, and restarted the hide coroutine.
-    val interactions = remember { Channel<Unit>(Channel.CONFLATED) }
-    LaunchedEffect(interactions) {
-        while (true) {
-            interactions.receive()
-            barsVisible = true
-            // Every further touch restarts the countdown; only silence for the whole IDLE_HIDE_MS
-            // hides the bars.
-            while (withTimeoutOrNull(IDLE_HIDE_MS) { interactions.receive() } != null) {
-                // keep waiting
-            }
-            barsVisible = false
-        }
-    }
-    LaunchedEffect(barsVisible, insetsController) {
-        val bars = WindowInsetsCompat.Type.systemBars()
-        if (barsVisible) insetsController?.show(bars) else insetsController?.hide(bars)
-    }
-    DisposableEffect(insetsController) {
-        onDispose { insetsController?.show(WindowInsetsCompat.Type.systemBars()) }
-    }
-
+    // Keep Android's status and navigation bars visible at all times. The layout already uses
+    // safe/system-bar insets, so controls stay clear of the bars without forcing an immersive
+    // full-screen mode. This also keeps phone notifications and the navigation buttons reachable
+    // while the timer is running.
     // Deleting the last project is refused, so an empty list only happens in the sliver before the
     // first-run seeding lands. Even then the screen must stay usable: a blank frame with no controls
     // used to be a dead end, escapable only by restarting the app.
