@@ -103,11 +103,16 @@ class TimerService : Service() {
                 engine.state.collect { state ->
                     if (state.status == TimerStatus.IDLE && !state.awaitingDecision) {
                         notificationManager().cancel(PHASE_END_NOTIFICATION_ID)
+                        notificationManager().cancel(WEARABLE_TIMER_NOTIFICATION_ID)
                         stopSelf()
                         return@collect
                     }
                     if (!state.awaitingDecision) {
                         notificationManager().cancel(PHASE_END_NOTIFICATION_ID)
+                    } else {
+                        // The phase-end alert replaces the running timer on the band while the
+                        // user is choosing what to do next.
+                        notificationManager().cancel(WEARABLE_TIMER_NOTIFICATION_ID)
                     }
                     // The countdown itself is drawn by the system chronometer, so a re-post is only
                     // worth it when something else moved: the phase, the run state, or the progress
@@ -116,6 +121,16 @@ class TimerService : Service() {
                     if (signature != lastSignature) {
                         lastSignature = signature
                         notificationManager().notify(NOTIFICATION_ID, buildNotification())
+                        if (!state.awaitingDecision) {
+                            // Foreground-service notifications are not reliably mirrored by
+                            // Galaxy Fit2. Post a second, ordinary notification with the same
+                            // system countdown metadata so Samsung's phone-to-band bridge can
+                            // display the remaining time without the app waking every second.
+                            notificationManager().notify(
+                                WEARABLE_TIMER_NOTIFICATION_ID,
+                                buildWearableTimerNotification(state)
+                            )
+                        }
                     }
                     delay(MIN_NOTIFICATION_INTERVAL_MS)
                 }
@@ -125,6 +140,7 @@ class TimerService : Service() {
             eventJob = scope.launch {
                 engine.events.collect { event ->
                     if (event is TimerEvent.PhaseFinished) {
+                        notificationManager().cancel(WEARABLE_TIMER_NOTIFICATION_ID)
                         notificationManager().notify(
                             PHASE_END_NOTIFICATION_ID,
                             buildPhaseEndNotification(event.phase)
@@ -139,6 +155,7 @@ class TimerService : Service() {
     override fun onDestroy() {
         observeJob?.cancel()
         eventJob?.cancel()
+        notificationManager().cancel(WEARABLE_TIMER_NOTIFICATION_ID)
         scope.cancel()
         super.onDestroy()
     }
@@ -215,6 +232,54 @@ class TimerService : Service() {
                 localized.getString(R.string.action_stop_activity),
                 actionPendingIntent(ACTION_STOP_ACTIVITY)
             )
+        }
+
+        return builder.build()
+    }
+
+    /**
+     * Mirror-friendly companion for Galaxy Fit2.
+     *
+     * The foreground notification above is intentionally ongoing because it owns the service, but
+     * Samsung's notification bridge commonly leaves ongoing foreground-service notifications on
+     * the phone. This ordinary notification carries Android's native countdown fields instead.
+     * If Fit2 renders those fields, the digits tick on the band without per-second app updates.
+     */
+    private fun buildWearableTimerNotification(state: TimerState): Notification {
+        val phaseText = when (state.phase) {
+            Phase.POMODORO -> localized.getString(R.string.phase_pomodoro)
+            Phase.SHORT_BREAK -> localized.getString(R.string.phase_short_break)
+            Phase.LONG_BREAK -> localized.getString(R.string.phase_long_break)
+        }
+        val title = state.project?.name?.let { "$it · $phaseText" } ?: phaseText
+        val openIntent = PendingIntent.getActivity(
+            this,
+            WEARABLE_TIMER_NOTIFICATION_ID,
+            Intent(this, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP),
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
+
+        val builder = NotificationCompat.Builder(this, WEARABLE_TIMER_CHANNEL_ID)
+            .setSmallIcon(R.drawable.ic_timer_notification)
+            .setContentTitle(title)
+            .setContentIntent(openIntent)
+            .setCategory(NotificationCompat.CATEGORY_PROGRESS)
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+            .setOngoing(false)
+            .setLocalOnly(false)
+            .setAutoCancel(false)
+            .setOnlyAlertOnce(true)
+            .setSilent(true)
+
+        if (state.status == TimerStatus.RUNNING) {
+            builder.setUsesChronometer(true)
+                .setChronometerCountDown(true)
+                .setWhen(System.currentTimeMillis() + state.remainingSeconds * MILLIS_PER_SECOND)
+                .setShowWhen(true)
+        } else {
+            builder.setUsesChronometer(false)
+                .setShowWhen(false)
+                .setContentText(formatMmSs(state.remainingSeconds))
         }
 
         return builder.build()
@@ -395,6 +460,21 @@ class TimerService : Service() {
         }
         notificationManager().createNotificationChannel(channel)
 
+        val wearableTimerChannel = NotificationChannel(
+            WEARABLE_TIMER_CHANNEL_ID,
+            localized.getString(R.string.timer_channel_name),
+            NotificationManager.IMPORTANCE_DEFAULT
+        ).apply {
+            description = localized.getString(R.string.timer_channel_desc)
+            setShowBadge(false)
+            lockscreenVisibility = Notification.VISIBILITY_PUBLIC
+            // Keep the companion quiet on the phone. Its purpose is to be bridgeable to Fit2;
+            // the phase-end channel remains the one that deliberately vibrates.
+            setSound(null, null)
+            enableVibration(false)
+        }
+        notificationManager().createNotificationChannel(wearableTimerChannel)
+
         val phaseAlertChannel = NotificationChannel(
             PHASE_ALERT_CHANNEL_ID,
             localized.getString(R.string.phase_alert_channel_name),
@@ -433,8 +513,10 @@ class TimerService : Service() {
     companion object {
         private const val CHANNEL_ID = "timer_channel"
         private const val PHASE_ALERT_CHANNEL_ID = "phase_alert_channel_v2"
+        private const val WEARABLE_TIMER_CHANNEL_ID = "wearable_timer_channel_v1"
         private const val NOTIFICATION_ID = 1001
         private const val PHASE_END_NOTIFICATION_ID = 1002
+        private const val WEARABLE_TIMER_NOTIFICATION_ID = 1003
 
         /** The countdown only ever shows whole seconds, so posting faster than this buys nothing. */
         private const val MIN_NOTIFICATION_INTERVAL_MS = 250L
