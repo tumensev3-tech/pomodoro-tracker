@@ -53,12 +53,15 @@ import com.drklo.pomodoro.R
 import com.drklo.pomodoro.data.backup.ProjectBackup
 import com.drklo.pomodoro.data.model.AppLanguage
 import com.drklo.pomodoro.data.model.Project
+import com.drklo.pomodoro.data.model.ProjectIcon
 import com.drklo.pomodoro.data.model.ThemeMode
+import com.drklo.pomodoro.data.model.VibrationPattern
 import com.drklo.pomodoro.ui.ViewModelFactories
 import com.drklo.pomodoro.ui.common.ConfirmDeleteProjectDialog
 import com.drklo.pomodoro.ui.common.SegmentedChoice
 import com.drklo.pomodoro.ui.common.Stepper
 import com.drklo.pomodoro.ui.common.TimeOfDayField
+import com.drklo.pomodoro.ui.common.symbol
 import com.drklo.pomodoro.util.BatteryOptimization
 import com.drklo.pomodoro.util.findActivity
 import java.time.LocalDate
@@ -195,27 +198,30 @@ fun SettingsScreen(
                 SettingsGroup(stringResource(R.string.section_general)) {
                     SwitchRow(stringResource(R.string.setting_sound), settings.soundEnabled, viewModel::setSound)
                     SwitchRow(stringResource(R.string.setting_vibrate), settings.vibrateEnabled, viewModel::setVibrate)
+                    if (settings.vibrateEnabled) {
+                        Text(
+                            stringResource(R.string.setting_vibration_pattern),
+                            fontWeight = FontWeight.Medium,
+                            modifier = Modifier.padding(top = 4.dp, bottom = 6.dp)
+                        )
+                        SegmentedChoice(
+                            options = listOf(
+                                VibrationPattern.SHORT to stringResource(R.string.vibration_short),
+                                VibrationPattern.MEDIUM to stringResource(R.string.vibration_medium),
+                                VibrationPattern.LONG to stringResource(R.string.vibration_long),
+                                VibrationPattern.CALL to stringResource(R.string.vibration_call)
+                            ),
+                            selected = settings.vibrationPattern,
+                            onSelect = viewModel::setVibrationPattern,
+                            modifier = Modifier.padding(bottom = 4.dp)
+                        )
+                        Caption(stringResource(R.string.setting_vibration_pattern_summary))
+                    }
                     SwitchRow(
                         stringResource(R.string.setting_always_on),
                         settings.alwaysOnDisplay,
                         viewModel::setAlwaysOn
                     )
-                    SwitchRow(
-                        stringResource(R.string.setting_autostart_pomodoros),
-                        settings.autostartPomodoros,
-                        viewModel::setAutostartPomodoros
-                    )
-                    SwitchRow(
-                        stringResource(R.string.setting_autostart_breaks),
-                        settings.autostartBreaks,
-                        viewModel::setAutostartBreaks
-                    )
-                    SwitchRow(
-                        stringResource(R.string.setting_hold_finished_color),
-                        settings.holdFinishedPhaseColor,
-                        viewModel::setHoldFinishedPhaseColor
-                    )
-                    Caption(stringResource(R.string.setting_hold_finished_color_summary))
                     RowDivider()
                     // Resolved here rather than inside valueText: that lambda is not composable, so
                     // reading resources through the context there is invisible to recomposition and
@@ -422,11 +428,19 @@ private fun ProjectRow(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Box(
+            contentAlignment = Alignment.Center,
             modifier = Modifier
-                .size(22.dp)
+                .size(34.dp)
                 .clip(CircleShape)
                 .background(Color(project.pomodoroColor))
-        )
+        ) {
+            if (project.icon != ProjectIcon.NONE) {
+                Text(
+                    text = project.icon.symbol(),
+                    style = MaterialTheme.typography.titleMedium
+                )
+            }
+        }
         Column(modifier = Modifier.weight(1f).padding(start = 14.dp)) {
             Text(project.name, fontWeight = FontWeight.Medium)
             Text(

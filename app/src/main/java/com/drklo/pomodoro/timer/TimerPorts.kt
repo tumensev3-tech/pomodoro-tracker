@@ -1,6 +1,7 @@
 package com.drklo.pomodoro.timer
 
 import com.drklo.pomodoro.data.model.GlobalSettings
+import com.drklo.pomodoro.data.model.VibrationPattern
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -33,4 +34,7 @@ interface PhaseFeedback {
     fun playStart()
     fun playEnd()
     fun vibrate()
+
+    fun vibrate(pattern: VibrationPattern) = vibrate()
+    fun cancelVibration() = Unit
 }
