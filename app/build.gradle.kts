@@ -32,11 +32,11 @@ android {
     compileSdk = 37
 
     defaultConfig {
-        applicationId = "com.drklo.pomodoro"
+        applicationId = "space.xproject.focuslot"
         minSdk = 29
         targetSdk = 37
-        versionCode = 3
-        versionName = "1.2"
+        versionCode = 1
+        versionName = "1.0.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
