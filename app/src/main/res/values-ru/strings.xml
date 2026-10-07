@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Помодоро</string>
+    <string name="app_name">Focuslot</string>
 
     <!-- Phases -->
     <string name="phase_pomodoro">Помодоро</string>
