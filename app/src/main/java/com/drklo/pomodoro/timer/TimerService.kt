@@ -46,6 +46,13 @@ class TimerService : Service() {
     /** Last posted appearance; see [notificationSignature]. */
     private var lastSignature: String? = null
 
+    /**
+     * The Fit2 companion is intentionally separate from the foreground notification, but unlike the
+     * phone notification it must not be refreshed for progress updates: every refresh becomes the
+     * newest item on the band and can mask unrelated incoming notifications.
+     */
+    private var lastWearableSignature: String? = null
+
     private val engine: TimerEngine
         get() = (application as PomodoroApp).container.timerEngine
 
@@ -121,11 +128,18 @@ class TimerService : Service() {
                     if (signature != lastSignature) {
                         lastSignature = signature
                         notificationManager().notify(NOTIFICATION_ID, buildNotification())
-                        if (!state.awaitingDecision) {
-                            // Foreground-service notifications are not reliably mirrored by
-                            // Galaxy Fit2. Post a second, ordinary notification with the same
-                            // system countdown metadata so Samsung's phone-to-band bridge can
-                            // display the remaining time without the app waking every second.
+                    }
+
+                    if (!state.awaitingDecision) {
+                        val wearableSignature = state.wearableNotificationSignature()
+                        if (wearableSignature != lastWearableSignature) {
+                            lastWearableSignature = wearableSignature
+                            // Galaxy Fit2 does not reliably mirror the foreground-service
+                            // notification. Send a short-lived companion only when the timer's
+                            // meaningful state changes (start, pause/resume, phase/project change,
+                            // extension), never for ordinary progress ticks. This lets the band show
+                            // the slot end time without permanently becoming the "latest"
+                            // notification and hiding messages from other apps.
                             notificationManager().notify(
                                 WEARABLE_TIMER_NOTIFICATION_ID,
                                 buildWearableTimerNotification(state)
@@ -270,10 +284,14 @@ class TimerService : Service() {
             .setAutoCancel(false)
             .setOnlyAlertOnce(true)
             .setSilent(true)
+            // Give Samsung's bridge enough time to copy it to Fit2, then remove the duplicate from
+            // the phone and the band so normal incoming notifications can take over.
+            .setTimeoutAfter(WEARABLE_TIMER_TIMEOUT_MS)
 
         if (state.status == TimerStatus.RUNNING) {
-            builder.setUsesChronometer(true)
-                .setChronometerCountDown(true)
+            // Fit2 renders the future 'when' value as the slot finish time. A live Android
+            // chronometer is unnecessary here and tends to keep the companion looking active.
+            builder.setUsesChronometer(false)
                 .setWhen(System.currentTimeMillis() + state.remainingSeconds * MILLIS_PER_SECOND)
                 .setShowWhen(true)
         } else {
@@ -510,6 +528,11 @@ class TimerService : Service() {
         return "$status|$phase|${project?.id}|$step"
     }
 
+    private fun TimerState.wearableNotificationSignature(): String {
+        val pausedTime = if (status == TimerStatus.PAUSED) remainingSeconds else 0
+        return "$status|$phase|${project?.id}|$totalSeconds|$pausedTime"
+    }
+
     companion object {
         private const val CHANNEL_ID = "timer_channel"
         private const val PHASE_ALERT_CHANNEL_ID = "phase_alert_channel_v2"
@@ -522,6 +545,7 @@ class TimerService : Service() {
         private const val MIN_NOTIFICATION_INTERVAL_MS = 250L
 
         private const val MILLIS_PER_SECOND = 1000L
+        private const val WEARABLE_TIMER_TIMEOUT_MS = 10_000L
         private const val EXTEND_5_MINUTES = 5
         private const val EXTEND_10_MINUTES = 10
         private const val EXTEND_15_MINUTES = 15
