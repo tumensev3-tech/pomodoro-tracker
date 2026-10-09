@@ -124,11 +124,11 @@
     <string name="setting_sound">Sounds</string>
     <string name="setting_vibrate">Vibration</string>
     <string name="setting_vibration_pattern">Phase-end vibration</string>
-    <string name="setting_vibration_pattern_summary">Manual start keeps the short pulse. This pattern is used when work or a break finishes.</string>
-    <string name="vibration_short">Short</string>
-    <string name="vibration_medium">Medium</string>
-    <string name="vibration_long">Long</string>
-    <string name="vibration_call">Double short pulses (2 min)</string>
+    <string name="setting_vibration_pattern_summary">Choose how the phone vibrates when work or a break finishes. All variants use short, clearly separated pulses.</string>
+    <string name="vibration_short">1 pulse</string>
+    <string name="vibration_medium">2 pulses</string>
+    <string name="vibration_long">3 pulses</string>
+    <string name="vibration_call">Repeating double (2 min)</string>
     <string name="setting_always_on">Keep screen on</string>
     <string name="setting_idle_alert">Idle alert</string>
     <string name="setting_idle_alert_summary">Flip screen colors every N min while idle (screen-on only)</string>
