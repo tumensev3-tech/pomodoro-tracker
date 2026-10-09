@@ -2,7 +2,7 @@ name: Build custom APK
 
 on:
   push:
-    branches: [custom-vibration-v1.2]
+    branches: [custom-vibration-v1.2, focuslot-release-prep]
   workflow_dispatch:
 
 concurrency:
