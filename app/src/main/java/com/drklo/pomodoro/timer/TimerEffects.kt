@@ -100,9 +100,9 @@ class TimerEffects(context: Context) : PhaseFeedback {
     /** Noticeable phase-end vibration selected in Settings. */
     override fun vibrate(pattern: VibrationPattern) {
         val effect = when (pattern) {
-            VibrationPattern.SHORT -> oneShot(DEFAULT_VIBRATION_MS)
-            VibrationPattern.MEDIUM -> VibrationEffect.createWaveform(MEDIUM_PATTERN_MS, -1)
-            VibrationPattern.LONG -> VibrationEffect.createWaveform(LONG_PATTERN_MS, -1)
+            VibrationPattern.SHORT -> oneShot(SHORT_PULSE_MS)
+            VibrationPattern.MEDIUM -> VibrationEffect.createWaveform(DOUBLE_PULSE_PATTERN_MS, -1)
+            VibrationPattern.LONG -> VibrationEffect.createWaveform(TRIPLE_PULSE_PATTERN_MS, -1)
             VibrationPattern.CALL -> VibrationEffect.createWaveform(CALL_PATTERN_MS, -1)
         }
         vibrate(effect)
@@ -126,21 +126,24 @@ class TimerEffects(context: Context) : PhaseFeedback {
     private companion object {
         const val TAG = "TimerEffects"
         const val DEFAULT_VIBRATION_MS = 400L
+        private const val SHORT_PULSE_MS = 140L
+        private const val PULSE_GAP_MS = 110L
 
-        // Waveforms alternate pause / vibration, starting immediately with the leading zero.
-        val MEDIUM_PATTERN_MS = longArrayOf(
+        // Distinct short-pulse patterns are easier to recognise than long continuous buzzing and
+        // match the app's original goal: attention-grabbing feedback without feeling like a call.
+        val DOUBLE_PULSE_PATTERN_MS = longArrayOf(
             0L,
-            700L,
-            250L,
-            700L
+            SHORT_PULSE_MS,
+            PULSE_GAP_MS,
+            SHORT_PULSE_MS
         )
-        val LONG_PATTERN_MS = longArrayOf(
+        val TRIPLE_PULSE_PATTERN_MS = longArrayOf(
             0L,
-            900L,
-            300L,
-            900L,
-            300L,
-            900L
+            SHORT_PULSE_MS,
+            PULSE_GAP_MS,
+            SHORT_PULSE_MS,
+            PULSE_GAP_MS,
+            SHORT_PULSE_MS
         )
         private const val CALL_PULSE_MS = 120L
         private const val CALL_INTRA_PAUSE_MS = 100L
