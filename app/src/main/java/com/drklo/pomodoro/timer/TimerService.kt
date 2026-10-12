@@ -284,9 +284,6 @@ class TimerService : Service() {
             .setAutoCancel(false)
             .setOnlyAlertOnce(true)
             .setSilent(true)
-            // Give Samsung's bridge enough time to copy it to Fit2, then remove the duplicate from
-            // the phone and the band so normal incoming notifications can take over.
-            .setTimeoutAfter(WEARABLE_TIMER_TIMEOUT_MS)
 
         if (state.status == TimerStatus.RUNNING) {
             // Fit2 renders the future 'when' value as the slot finish time. A live Android
@@ -545,7 +542,6 @@ class TimerService : Service() {
         private const val MIN_NOTIFICATION_INTERVAL_MS = 250L
 
         private const val MILLIS_PER_SECOND = 1000L
-        private const val WEARABLE_TIMER_TIMEOUT_MS = 10_000L
         private const val EXTEND_5_MINUTES = 5
         private const val EXTEND_10_MINUTES = 10
         private const val EXTEND_15_MINUTES = 15
