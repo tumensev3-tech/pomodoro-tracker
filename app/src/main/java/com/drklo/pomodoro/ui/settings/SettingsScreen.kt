@@ -15,6 +15,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -111,6 +113,36 @@ fun SettingsScreen(
     ) { uri -> pendingImport = uri }
 
     val suggestedFileName = stringResource(R.string.backup_file_name, LocalDate.now().toString())
+
+    var showOpenSourceNotice by remember { mutableStateOf(false) }
+    if (showOpenSourceNotice) {
+        val originalLicense = remember(context) {
+            context.resources.openRawResource(R.raw.original_project_license)
+                .bufferedReader()
+                .use { it.readText() }
+        }
+        AlertDialog(
+            onDismissRequest = { showOpenSourceNotice = false },
+            title = { Text(stringResource(R.string.open_source_title)) },
+            text = {
+                Column(
+                    modifier = Modifier.verticalScroll(rememberScrollState())
+                ) {
+                    Text(stringResource(R.string.open_source_intro))
+                    Text(
+                        text = originalLicense,
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(top = 12.dp)
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showOpenSourceNotice = false }) {
+                    Text(stringResource(R.string.action_ok))
+                }
+            }
+        )
+    }
 
     pendingImport?.let { uri ->
         AlertDialog(
@@ -326,6 +358,17 @@ fun SettingsScreen(
                             }
                         },
                         modifier = Modifier.padding(vertical = 8.dp)
+                    )
+                }
+            }
+
+            // --- About / licenses ---
+            item {
+                SettingsGroup(stringResource(R.string.section_about)) {
+                    ActionRow(
+                        label = stringResource(R.string.action_open_source),
+                        summary = stringResource(R.string.action_open_source_summary),
+                        onClick = { showOpenSourceNotice = true }
                     )
                 }
             }
