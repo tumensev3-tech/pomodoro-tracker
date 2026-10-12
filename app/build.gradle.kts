@@ -35,8 +35,8 @@ android {
         applicationId = "com.drklo.pomodoro"
         minSdk = 29
         targetSdk = 37
-        versionCode = 4
-        versionName = "1.3-focuslot-test"
+        versionCode = 5
+        versionName = "1.3.1-focuslot-test"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
