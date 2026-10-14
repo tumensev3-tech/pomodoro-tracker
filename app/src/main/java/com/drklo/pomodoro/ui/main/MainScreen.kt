@@ -260,18 +260,16 @@ fun MainScreen(
             }
         }
 
-        // Reports + burger — hidden during an active timer for minimalism (F-019).
-        if (!isRunning && !freeTimer.running) {
+        // Statistics stays reachable while the timer is running. Opening Reports does not touch
+        // TimerEngine, so the countdown continues in the foreground service. Settings remains
+        // hidden during RUNNING to keep accidental configuration changes out of an active slot.
+        if (!freeTimer.running && !state.awaitingDecision) {
             Row(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
                     // Every system bar, not just the status bar. The window is drawn edge to edge,
                     // and in landscape the navigation bar sits on the right — exactly where these
-                    // icons are. With only statusBarsPadding they went under it: the reports icon
-                    // was reduced to a sliver and the settings one was entirely off-screen, so
-                    // there was no way into settings while the phone was sideways. The auto-hide
-                    // below used to mask it after three seconds; a control has to be reachable
-                    // before that too.
+                    // icons are.
                     .safeDrawingPadding()
                     .padding(4.dp)
             ) {
@@ -282,12 +280,14 @@ fun MainScreen(
                         tint = Color.White
                     )
                 }
-                IconButton(onClick = onOpenSettings) {
-                    Icon(
-                        Icons.Filled.Menu,
-                        contentDescription = stringResource(R.string.cd_settings),
-                        tint = Color.White
-                    )
+                if (!isRunning) {
+                    IconButton(onClick = onOpenSettings) {
+                        Icon(
+                            Icons.Filled.Menu,
+                            contentDescription = stringResource(R.string.cd_settings),
+                            tint = Color.White
+                        )
+                    }
                 }
             }
         }
