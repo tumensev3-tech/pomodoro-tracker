@@ -46,13 +46,6 @@ class TimerService : Service() {
     /** Last posted appearance; see [notificationSignature]. */
     private var lastSignature: String? = null
 
-    /**
-     * The Fit2 companion is intentionally separate from the foreground notification, but unlike the
-     * phone notification it must not be refreshed for progress updates: every refresh becomes the
-     * newest item on the band and can mask unrelated incoming notifications.
-     */
-    private var lastWearableSignature: String? = null
-
     private val engine: TimerEngine
         get() = (application as PomodoroApp).container.timerEngine
 
@@ -70,6 +63,11 @@ class TimerService : Service() {
         val tag = (application as PomodoroApp).languageTag
         localized = LocaleHelper.wrap(this, tag)
         createChannel()
+        // Remove the old second "wearable companion" notification/channel from earlier builds.
+        // From this build onward the one foreground notification is also the one mirrored to Fit2.
+        notificationManager().cancel(WEARABLE_TIMER_NOTIFICATION_ID)
+        notificationManager().deleteNotificationChannel(WEARABLE_TIMER_CHANNEL_ID)
+        notificationManager().deleteNotificationChannel(LEGACY_TIMER_CHANNEL_ID)
     }
 
     @Suppress("LongMethod", "CyclomaticComplexMethod")
@@ -130,22 +128,6 @@ class TimerService : Service() {
                         notificationManager().notify(NOTIFICATION_ID, buildNotification())
                     }
 
-                    if (!state.awaitingDecision) {
-                        val wearableSignature = state.wearableNotificationSignature()
-                        if (wearableSignature != lastWearableSignature) {
-                            lastWearableSignature = wearableSignature
-                            // Galaxy Fit2 does not reliably mirror the foreground-service
-                            // notification. Send a short-lived companion only when the timer's
-                            // meaningful state changes (start, pause/resume, phase/project change,
-                            // extension), never for ordinary progress ticks. This lets the band show
-                            // the slot end time without permanently becoming the "latest"
-                            // notification and hiding messages from other apps.
-                            notificationManager().notify(
-                                WEARABLE_TIMER_NOTIFICATION_ID,
-                                buildWearableTimerNotification(state)
-                            )
-                        }
-                    }
                     delay(MIN_NOTIFICATION_INTERVAL_MS)
                 }
             }
@@ -177,12 +159,7 @@ class TimerService : Service() {
     @Suppress("LongMethod")
     private fun buildNotification(): Notification {
         val state = engine.state.value
-        val phaseText = when (state.phase) {
-            Phase.POMODORO -> localized.getString(R.string.phase_pomodoro)
-            Phase.SHORT_BREAK -> localized.getString(R.string.phase_short_break)
-            Phase.LONG_BREAK -> localized.getString(R.string.phase_long_break)
-        }
-        val title = state.project?.name?.let { "$it · $phaseText" } ?: phaseText
+        val title = notificationTitle(state)
         val elapsed = (state.totalSeconds - state.remainingSeconds).coerceAtLeast(0)
 
         val openIntent = PendingIntent.getActivity(
@@ -196,9 +173,14 @@ class TimerService : Service() {
             .setSmallIcon(R.drawable.ic_timer_notification)
             .setContentTitle(title)
             .setContentIntent(openIntent)
-            .setOnlyAlertOnce(true)
-            .setOngoing(true)
+            .setOnlyAlertOnce(false)
+            // Do not mark it ongoing at the notification layer: the service is still foreground,
+            // but Samsung's Fit2 bridge filters many ongoing notifications. One bridgeable
+            // foreground notification means one item on the phone instead of a second companion.
+            .setOngoing(false)
+            .setLocalOnly(false)
             .setSilent(true)
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setCategory(NotificationCompat.CATEGORY_PROGRESS)
             // How far through the phase, without having to read the digits.
             .setProgress(state.totalSeconds.coerceAtLeast(1), elapsed, false)
@@ -246,55 +228,6 @@ class TimerService : Service() {
                 localized.getString(R.string.action_stop_activity),
                 actionPendingIntent(ACTION_STOP_ACTIVITY)
             )
-        }
-
-        return builder.build()
-    }
-
-    /**
-     * Mirror-friendly companion for Galaxy Fit2.
-     *
-     * The foreground notification above is intentionally ongoing because it owns the service, but
-     * Samsung's notification bridge commonly leaves ongoing foreground-service notifications on
-     * the phone. This ordinary notification carries Android's native countdown fields instead.
-     * If Fit2 renders those fields, the digits tick on the band without per-second app updates.
-     */
-    private fun buildWearableTimerNotification(state: TimerState): Notification {
-        val phaseText = when (state.phase) {
-            Phase.POMODORO -> localized.getString(R.string.phase_pomodoro)
-            Phase.SHORT_BREAK -> localized.getString(R.string.phase_short_break)
-            Phase.LONG_BREAK -> localized.getString(R.string.phase_long_break)
-        }
-        val title = state.project?.name?.let { "$it · $phaseText" } ?: phaseText
-        val openIntent = PendingIntent.getActivity(
-            this,
-            WEARABLE_TIMER_NOTIFICATION_ID,
-            Intent(this, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP),
-            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
-        )
-
-        val builder = NotificationCompat.Builder(this, WEARABLE_TIMER_CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_timer_notification)
-            .setContentTitle(title)
-            .setContentIntent(openIntent)
-            .setCategory(NotificationCompat.CATEGORY_PROGRESS)
-            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-            .setOngoing(false)
-            .setLocalOnly(false)
-            .setAutoCancel(false)
-            .setOnlyAlertOnce(true)
-            .setSilent(true)
-
-        if (state.status == TimerStatus.RUNNING) {
-            // Fit2 renders the future 'when' value as the slot finish time. A live Android
-            // chronometer is unnecessary here and tends to keep the companion looking active.
-            builder.setUsesChronometer(false)
-                .setWhen(System.currentTimeMillis() + state.remainingSeconds * MILLIS_PER_SECOND)
-                .setShowWhen(true)
-        } else {
-            builder.setUsesChronometer(false)
-                .setShowWhen(false)
-                .setContentText(formatMmSs(state.remainingSeconds))
         }
 
         return builder.build()
@@ -467,28 +400,17 @@ class TimerService : Service() {
         val channel = NotificationChannel(
             CHANNEL_ID,
             localized.getString(R.string.timer_channel_name),
-            NotificationManager.IMPORTANCE_LOW
-        ).apply {
-            description = localized.getString(R.string.timer_channel_desc)
-            setShowBadge(false)
-            lockscreenVisibility = Notification.VISIBILITY_PUBLIC
-        }
-        notificationManager().createNotificationChannel(channel)
-
-        val wearableTimerChannel = NotificationChannel(
-            WEARABLE_TIMER_CHANNEL_ID,
-            localized.getString(R.string.timer_channel_name),
             NotificationManager.IMPORTANCE_DEFAULT
         ).apply {
             description = localized.getString(R.string.timer_channel_desc)
             setShowBadge(false)
             lockscreenVisibility = Notification.VISIBILITY_PUBLIC
-            // Keep the companion quiet on the phone. Its purpose is to be bridgeable to Fit2;
-            // the phase-end channel remains the one that deliberately vibrates.
+            // The timer should be visible and bridgeable to Fit2, but only phase-end alerts should
+            // make noise or vibrate.
             setSound(null, null)
             enableVibration(false)
         }
-        notificationManager().createNotificationChannel(wearableTimerChannel)
+        notificationManager().createNotificationChannel(channel)
 
         val phaseAlertChannel = NotificationChannel(
             PHASE_ALERT_CHANNEL_ID,
@@ -525,13 +447,26 @@ class TimerService : Service() {
         return "$status|$phase|${project?.id}|$step"
     }
 
-    private fun TimerState.wearableNotificationSignature(): String {
-        val pausedTime = if (status == TimerStatus.PAUSED) remainingSeconds else 0
-        return "$status|$phase|${project?.id}|$totalSeconds|$pausedTime"
+    private fun notificationTitle(state: TimerState): String {
+        val projectName = state.project?.name?.takeIf { it.isNotBlank() }
+        return when (state.phase) {
+            // "Помодоро" adds no useful information while working: the activity name and countdown
+            // already say what matters. Keep phase text for breaks, where it changes the meaning.
+            Phase.POMODORO -> projectName ?: localized.getString(R.string.phase_pomodoro)
+            Phase.SHORT_BREAK -> listOfNotNull(
+                projectName,
+                localized.getString(R.string.phase_short_break)
+            ).joinToString(" · ")
+            Phase.LONG_BREAK -> listOfNotNull(
+                projectName,
+                localized.getString(R.string.phase_long_break)
+            ).joinToString(" · ")
+        }
     }
 
     companion object {
-        private const val CHANNEL_ID = "timer_channel"
+        private const val CHANNEL_ID = "timer_channel_v2"
+        private const val LEGACY_TIMER_CHANNEL_ID = "timer_channel"
         private const val PHASE_ALERT_CHANNEL_ID = "phase_alert_channel_v2"
         private const val WEARABLE_TIMER_CHANNEL_ID = "wearable_timer_channel_v1"
         private const val NOTIFICATION_ID = 1001
