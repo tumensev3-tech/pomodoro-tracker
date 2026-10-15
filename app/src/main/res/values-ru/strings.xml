@@ -3,6 +3,7 @@
 
     <!-- Phases -->
     <string name="phase_pomodoro">Помодоро</string>
+    <string name="phase_focus">Фокус</string>
     <string name="phase_short_break">Пауза</string>
     <string name="phase_long_break">Длинная пауза</string>
 
