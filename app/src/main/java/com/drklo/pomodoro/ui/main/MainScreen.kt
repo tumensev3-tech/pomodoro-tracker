@@ -649,7 +649,7 @@ internal fun ProjectPage(
 
     val phaseName = stringResource(
         when (phase) {
-            Phase.POMODORO -> R.string.phase_pomodoro
+            Phase.POMODORO -> R.string.phase_focus
             Phase.SHORT_BREAK -> R.string.phase_short_break
             Phase.LONG_BREAK -> R.string.phase_long_break
         }
@@ -841,13 +841,13 @@ private fun ProjectDetails(
         )
     }
     Spacer(Modifier.height(if (compact) 4.dp else 6.dp))
-    // Phase type — always visible so the user knows pomodoro vs break (#7); tap to change (F-021).
+    // Phase type — always visible so the user knows focus vs break; tap to change (F-021).
     Text(
         text = phaseName,
         fontSize = if (compact) 15.sp else 18.sp,
         fontWeight = FontWeight.Medium,
         color = color.copy(alpha = 0.9f),
-        // The label reads as "Pomodoro"; onClickLabel is what tells a screen reader that activating
+        // The visible phase label is also the phase-switch control; onClickLabel tells a screen reader that activating
         // it switches phase, which is not guessable from the text.
         modifier = if (onChangePhase != null) {
             Modifier.clickable(onClickLabel = changePhaseLabel) { onChangePhase() }
