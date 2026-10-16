@@ -705,7 +705,7 @@ internal fun ProjectPage(
         ProjectDetails(
             project = project,
             filledBullets = filledBullets,
-            phaseName = phaseName,
+            phaseName = if (phase == Phase.POMODORO && status == TimerStatus.RUNNING) "" else phaseName,
             timeText = timeText,
             color = fg,
             compact = compact,
@@ -840,22 +840,26 @@ private fun ProjectDetails(
             color = color
         )
     }
-    Spacer(Modifier.height(if (compact) 4.dp else 6.dp))
-    // Phase type — always visible so the user knows focus vs break; tap to change (F-021).
-    Text(
-        text = phaseName,
-        fontSize = if (compact) 15.sp else 18.sp,
-        fontWeight = FontWeight.Medium,
-        color = color.copy(alpha = 0.9f),
-        // The visible phase label is also the phase-switch control; onClickLabel tells a screen reader that activating
-        // it switches phase, which is not guessable from the text.
-        modifier = if (onChangePhase != null) {
-            Modifier.clickable(onClickLabel = changePhaseLabel) { onChangePhase() }
-        } else {
-            Modifier
-        }
-    )
-    Spacer(Modifier.height(2.dp))
+    if (phaseName.isNotBlank()) {
+        Spacer(Modifier.height(if (compact) 4.dp else 6.dp))
+        // Keep the phase label for breaks and for non-running focus states where it is also the
+        // manual phase-switch control. During an active focus slot it adds no information, so hide
+        // it and keep the timer screen intentionally minimal.
+        Text(
+            text = phaseName,
+            fontSize = if (compact) 15.sp else 18.sp,
+            fontWeight = FontWeight.Medium,
+            color = color.copy(alpha = 0.9f),
+            modifier = if (onChangePhase != null) {
+                Modifier.clickable(onClickLabel = changePhaseLabel) { onChangePhase() }
+            } else {
+                Modifier
+            }
+        )
+        Spacer(Modifier.height(2.dp))
+    } else {
+        Spacer(Modifier.height(8.dp))
+    }
     Text(
         text = timeText,
         fontSize = if (compact) 30.sp else 40.sp,
