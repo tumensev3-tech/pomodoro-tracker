@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import java.io.IOException
 import java.time.LocalDate
@@ -100,17 +101,21 @@ class SettingsViewModel(
      * Refused outright while a timer runs: the engine holds the active project, and pulling its row
      * out from under it would leave a timer counting for something that no longer exists.
      */
-    fun importFrom(uri: Uri) = launchSafely {
+    fun importFrom(uri: Uri, onLanguageChanged: () -> Unit = {}) = launchSafely {
         if (timerIsBusy()) {
             _backup.value = BackupOutcome.RefusedTimerRunning
             return@launchSafely
         }
         _backup.value = BackupOutcome.Working
+        val languageBefore = settingsRepo.settings.first().language
         _backup.value = try {
             val stream = contentResolver.openInputStream(uri)
                 ?: return@launchSafely run { _backup.value = BackupOutcome.FileUnavailable() }
             val restored = stream.use { input ->
                 input.bufferedReader().use { reader -> backupRepo.import(reader) }
+            }
+            if (settingsRepo.settings.first().language != languageBefore) {
+                onLanguageChanged()
             }
             BackupOutcome.Imported(restored)
         } catch (e: ProjectBackup.BackupException) {
