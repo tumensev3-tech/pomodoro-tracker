@@ -3,6 +3,7 @@ package com.drklo.pomodoro.data.repository
 import androidx.room.withTransaction
 import com.drklo.pomodoro.data.backup.ProjectBackup
 import com.drklo.pomodoro.data.db.AppDatabase
+import com.drklo.pomodoro.data.model.GlobalSettings
 import java.io.Reader
 import java.io.Writer
 import kotlinx.coroutines.flow.first
@@ -17,7 +18,7 @@ import java.time.LocalDate
  */
 class BackupRepository(
     private val db: AppDatabase,
-    private val settingsRepository: SettingsRepository
+    private val settingsRepository: SettingsRepository? = null
 ) {
 
     private val projects = db.projectDao()
@@ -39,7 +40,7 @@ class BackupRepository(
         val fromKey = from.toString()
         val all = projects.getAll()
 
-        val settings = settingsRepository.settings.first()
+        val settings = settingsRepository?.settings?.first() ?: GlobalSettings()
         ProjectBackup.Sink(out).use { sink ->
             sink.begin(
                 exportedAtMs = nowMs,
@@ -93,7 +94,7 @@ class BackupRepository(
                 log.insertAll(record.log.map { it.copy(id = 0, projectId = newId) })
             }
         }
-        header.settings?.let { settingsRepository.replaceAll(it) }
+        header.settings?.let { restored -> settingsRepository?.replaceAll(restored) }
         return staged.size
     }
 }
