@@ -95,6 +95,21 @@ class SettingsRepository(private val context: Context) : SettingsSource {
     suspend fun setLanguage(language: AppLanguage) = edit { it[Keys.LANGUAGE] = language.tag }
     suspend fun setThemeMode(mode: ThemeMode) = edit { it[Keys.THEME] = mode.name }
 
+    suspend fun replaceAll(value: GlobalSettings) = edit { p ->
+        p[Keys.SOUND] = value.soundEnabled
+        p[Keys.VIBRATE] = value.vibrateEnabled
+        p[Keys.VIBRATION_PATTERN] = value.vibrationPattern.name
+        p[Keys.ALWAYS_ON] = value.alwaysOnDisplay
+        p[Keys.AUTOSTART] = value.autostartPomodoros
+        p[Keys.AUTOSTART_BREAKS] = value.autostartBreaks
+        p[Keys.IDLE_ALERT_MIN] = value.idleAlertMinutes.coerceIn(0, 120)
+        p[Keys.HOLD_FINISHED_COLOR] = value.holdFinishedPhaseColor
+        p[Keys.DAY_END_HOUR] = value.dayEndHour.coerceIn(0, 23)
+        p[Keys.DAY_END_MINUTE] = value.dayEndMinute.coerceIn(0, 59)
+        p[Keys.LANGUAGE] = value.language.tag
+        p[Keys.THEME] = value.themeMode.name
+    }
+
     private suspend fun edit(block: (androidx.datastore.preferences.core.MutablePreferences) -> Unit) {
         context.dataStore.edit(block)
     }
