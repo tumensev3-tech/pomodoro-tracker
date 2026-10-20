@@ -96,7 +96,7 @@ object ProjectBackup {
             exportedOn: LocalDate,
             historyFrom: LocalDate,
             appVersion: String,
-            settings: GlobalSettings
+            settings: GlobalSettings = GlobalSettings()
         ) {
             json.setIndent("  ")
             json.beginObject()
