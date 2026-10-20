@@ -1,39 +1,40 @@
-# Focuslot Privacy Policy
+# Политика конфиденциальности Focuslot
 
-Last updated: 20 October 2026
+Обновлено: 20 октября 2026 г.
 
-Focuslot is an offline focus timer for Android.
+Focuslot — офлайн-таймер фокусировки для Android.
 
-## Data processed by the app
+## Какие данные хранит приложение
 
-Focuslot stores the information you create in the app on your device, including:
-- activities/projects and their timer settings;
-- focus-session and break history;
-- statistics derived from that history;
-- app preferences such as sound, vibration, theme, language and day-boundary settings.
+Focuslot хранит на устройстве пользователя данные, которые создаются при работе с приложением:
 
-Focuslot does not require an account.
+- активности и их параметры;
+- историю фокус-сессий и перерывов;
+- статистику, рассчитанную на основе этой истории;
+- настройки приложения: звук, вибрацию, тему, язык, границу дня и другие параметры.
 
-## Data transmission
+Для работы Focuslot не требуется учётная запись.
 
-The current Android version of Focuslot does not request Internet access and does not send app data to the developer or to third-party analytics or advertising services.
+## Передача данных
 
-Notifications, including notifications mirrored to a paired wearable through the phone's system software, are handled by Android and the wearable companion software installed on the user's device.
+Текущая Android-версия Focuslot не запрашивает разрешение на доступ в Интернет. Приложение не отправляет данные разработчику и не использует сторонние системы аналитики или рекламы.
 
-## Backups
+Уведомления, в том числе их отображение на подключённом браслете, обрабатываются Android и программным обеспечением соответствующего носимого устройства.
 
-Focuslot can export a backup file containing projects, history and app settings. The user chooses where that file is saved and is responsible for any cloud or third-party storage service selected in the Android file picker.
+## Резервные копии
 
-## Permissions
+Focuslot позволяет экспортировать резервную копию с проектами, историей и настройками. Пользователь сам выбирает место сохранения файла. Если выбран облачный или сторонний сервис хранения, обработка файла этим сервисом регулируется его собственными условиями и политикой конфиденциальности.
 
-Focuslot may request permissions required for notifications, vibration and reliable background timer operation. These permissions are used only for the timer features described in the app.
+## Разрешения
 
-## Data deletion
+Focuslot может запрашивать разрешения, необходимые для уведомлений, вибрации и надёжной фоновой работы таймера. Они используются только для функций таймера.
 
-App data can be removed by clearing Focuslot's storage or uninstalling the app. Backup files exported by the user must be deleted separately from the location where the user saved them.
+## Удаление данных
 
-## Contact
+Данные приложения можно удалить через системные настройки Android или удалив Focuslot. Экспортированные пользователем резервные копии удаляются отдельно из места, куда они были сохранены.
 
-Support: tumensev@xproject.space
+## Контакты
 
-Website: https://xproject.space
+Поддержка: tumensev@xproject.space
+
+Сайт: https://xproject.space
