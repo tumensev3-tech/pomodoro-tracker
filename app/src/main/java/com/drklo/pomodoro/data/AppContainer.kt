@@ -39,8 +39,8 @@ class AppContainer(context: Context) {
     val activitySessionRepository: ActivitySessionRepository by lazy {
         ActivitySessionRepository(database)
     }
-    val backupRepository: BackupRepository by lazy { BackupRepository(database) }
     val settingsRepository: SettingsRepository by lazy { SettingsRepository(context.applicationContext) }
+    val backupRepository: BackupRepository by lazy { BackupRepository(database, settingsRepository) }
 
     private val timerEffects: TimerEffects by lazy { TimerEffects(context.applicationContext) }
 
