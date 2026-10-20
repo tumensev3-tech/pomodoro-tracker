@@ -5,17 +5,20 @@ import com.drklo.pomodoro.data.backup.ProjectBackup
 import com.drklo.pomodoro.data.db.AppDatabase
 import java.io.Reader
 import java.io.Writer
+import kotlinx.coroutines.flow.first
 import java.time.LocalDate
 
 /**
- * Moves projects and their history in and out of a file the user picked.
+ * Moves projects, history and global Focuslot settings in and out of a file the user picked.
  *
- * Only projects and history: the app's own settings — sound, language, theme, the day boundary —
- * are deliberately not part of a backup (owner's decision, 25.08.2026). They are a handful of
- * switches set once, and keeping them out means importing a file can never silently change the
- * language or the theme under someone.
+ * Old backups that predate settings remain valid: when the optional settings block is absent, the
+ * current install keeps its own settings. New backups restore the app as a whole instead of only
+ * restoring the project list.
  */
-class BackupRepository(private val db: AppDatabase) {
+class BackupRepository(
+    private val db: AppDatabase,
+    private val settingsRepository: SettingsRepository
+) {
 
     private val projects = db.projectDao()
     private val dayStats = db.dayStatDao()
@@ -36,8 +39,15 @@ class BackupRepository(private val db: AppDatabase) {
         val fromKey = from.toString()
         val all = projects.getAll()
 
+        val settings = settingsRepository.settings.first()
         ProjectBackup.Sink(out).use { sink ->
-            sink.begin(exportedAtMs = nowMs, exportedOn = today, historyFrom = from, appVersion = appVersion)
+            sink.begin(
+                exportedAtMs = nowMs,
+                exportedOn = today,
+                historyFrom = from,
+                appVersion = appVersion,
+                settings = settings
+            )
             all.forEach { project ->
                 sink.project(
                     ProjectBackup.Record(
@@ -71,7 +81,7 @@ class BackupRepository(private val db: AppDatabase) {
         // Reading first and writing second costs one pass in memory, bounded by the one-year window
         // the export applies. What it buys is that a truncated file cannot leave a half-restored
         // database — the transaction never opens.
-        ProjectBackup.read(source) { record -> staged += record }
+        val header = ProjectBackup.read(source) { record -> staged += record }
 
         db.withTransaction {
             log.deleteAll()
@@ -83,6 +93,7 @@ class BackupRepository(private val db: AppDatabase) {
                 log.insertAll(record.log.map { it.copy(id = 0, projectId = newId) })
             }
         }
+        header.settings?.let { settingsRepository.replaceAll(it) }
         return staged.size
     }
 }
