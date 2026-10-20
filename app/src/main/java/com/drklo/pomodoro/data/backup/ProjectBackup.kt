@@ -8,8 +8,12 @@ import com.drklo.pomodoro.data.db.DayStatEntity
 import com.drklo.pomodoro.data.db.PomodoroLogEntity
 import com.drklo.pomodoro.data.db.ProjectEntity
 import com.drklo.pomodoro.data.db.toDomain
+import com.drklo.pomodoro.data.model.AppLanguage
+import com.drklo.pomodoro.data.model.GlobalSettings
 import com.drklo.pomodoro.data.model.ProjectIcon
 import com.drklo.pomodoro.data.model.ProjectLimits
+import com.drklo.pomodoro.data.model.ThemeMode
+import com.drklo.pomodoro.data.model.VibrationPattern
 import java.io.Closeable
 import java.io.EOFException
 import java.io.IOException
@@ -44,6 +48,7 @@ object ProjectBackup {
     private const val FIELD_EXPORTED_ON = "exportedOn"
     private const val FIELD_APP_VERSION = "appVersion"
     private const val FIELD_HISTORY_FROM = "historyFrom"
+    private const val FIELD_SETTINGS = "settings"
     private const val FIELD_PROJECTS = "projects"
 
     /** Why a file was refused. Each maps to a sentence the user can act on. */
@@ -68,7 +73,8 @@ object ProjectBackup {
         val schemaVersion: Int,
         val exportedAtMs: Long,
         val appVersion: String?,
-        val historyFrom: String?
+        val historyFrom: String?,
+        val settings: GlobalSettings?
     )
 
     /**
@@ -85,7 +91,13 @@ object ProjectBackup {
     /** Writes the file. Closing it finishes the JSON; a half-written file is never a valid one. */
     class Sink(out: Writer, private val json: JsonWriter = JsonWriter(out)) : Closeable {
 
-        fun begin(exportedAtMs: Long, exportedOn: LocalDate, historyFrom: LocalDate, appVersion: String) {
+        fun begin(
+            exportedAtMs: Long,
+            exportedOn: LocalDate,
+            historyFrom: LocalDate,
+            appVersion: String,
+            settings: GlobalSettings
+        ) {
             json.setIndent("  ")
             json.beginObject()
             json.name(FIELD_SCHEMA).value(SCHEMA_VERSION.toLong())
@@ -93,7 +105,27 @@ object ProjectBackup {
             json.name(FIELD_EXPORTED_ON).value(exportedOn.toString())
             json.name(FIELD_APP_VERSION).value(appVersion)
             json.name(FIELD_HISTORY_FROM).value(historyFrom.toString())
+            writeSettings(settings)
             json.name(FIELD_PROJECTS).beginArray()
+        }
+
+        private fun writeSettings(settings: GlobalSettings) {
+            json.name(FIELD_SETTINGS).beginObject()
+            with(settings) {
+                json.name("soundEnabled").value(soundEnabled)
+                json.name("vibrateEnabled").value(vibrateEnabled)
+                json.name("vibrationPattern").value(vibrationPattern.name)
+                json.name("alwaysOnDisplay").value(alwaysOnDisplay)
+                json.name("autostartPomodoros").value(autostartPomodoros)
+                json.name("autostartBreaks").value(autostartBreaks)
+                json.name("idleAlertMinutes").value(idleAlertMinutes.toLong())
+                json.name("holdFinishedPhaseColor").value(holdFinishedPhaseColor)
+                json.name("dayEndHour").value(dayEndHour.toLong())
+                json.name("dayEndMinute").value(dayEndMinute.toLong())
+                json.name("language").value(language.tag)
+                json.name("themeMode").value(themeMode.name)
+            }
+            json.endObject()
         }
 
         fun project(record: Record) {
@@ -176,11 +208,12 @@ object ProjectBackup {
             json.expect(JsonToken.BEGIN_OBJECT) { json.beginObject() }
             while (json.hasNext()) {
                 when (val field = json.nextName()) {
-                    FIELD_SCHEMA -> header = Header(json.readSupportedVersion(field), 0, null, null)
+                    FIELD_SCHEMA -> header = Header(json.readSupportedVersion(field), 0, null, null, null)
 
                     FIELD_EXPORTED_AT -> header = header.orMalformed().copy(exportedAtMs = json.nextLong(field))
                     FIELD_APP_VERSION -> header = header.orMalformed().copy(appVersion = json.nextString(field))
                     FIELD_HISTORY_FROM -> header = header.orMalformed().copy(historyFrom = json.nextString(field))
+                    FIELD_SETTINGS -> header = header.orMalformed().copy(settings = json.readSettings())
 
                     FIELD_PROJECTS -> {
                         // The version is checked first because it is written first. A file that
@@ -222,6 +255,74 @@ object ProjectBackup {
         }
         endArray()
         return count
+    }
+
+    @Suppress("CyclomaticComplexMethod", "LongMethod")
+    private fun JsonReader.readSettings(): GlobalSettings {
+        val defaults = GlobalSettings()
+        var soundEnabled = defaults.soundEnabled
+        var vibrateEnabled = defaults.vibrateEnabled
+        var vibrationPattern = defaults.vibrationPattern
+        var alwaysOnDisplay = defaults.alwaysOnDisplay
+        var autostartPomodoros = defaults.autostartPomodoros
+        var autostartBreaks = defaults.autostartBreaks
+        var idleAlertMinutes = defaults.idleAlertMinutes
+        var holdFinishedPhaseColor = defaults.holdFinishedPhaseColor
+        var dayEndHour = defaults.dayEndHour
+        var dayEndMinute = defaults.dayEndMinute
+        var language = defaults.language
+        var themeMode = defaults.themeMode
+
+        expect(JsonToken.BEGIN_OBJECT) { beginObject() }
+        while (hasNext()) {
+            when (val field = nextName()) {
+                "soundEnabled" -> soundEnabled = nextBooleanOrFail(field)
+                "vibrateEnabled" -> vibrateEnabled = nextBooleanOrFail(field)
+                "vibrationPattern" -> {
+                    val raw = nextString(field)
+                    vibrationPattern = VibrationPattern.entries.firstOrNull { it.name == raw }
+                        ?: throw BackupException(Failure.INVALID_VALUE, "unknown vibration pattern")
+                }
+                "alwaysOnDisplay" -> alwaysOnDisplay = nextBooleanOrFail(field)
+                "autostartPomodoros" -> autostartPomodoros = nextBooleanOrFail(field)
+                "autostartBreaks" -> autostartBreaks = nextBooleanOrFail(field)
+                "idleAlertMinutes" -> idleAlertMinutes = nextInt(field)
+                "holdFinishedPhaseColor" -> holdFinishedPhaseColor = nextBooleanOrFail(field)
+                "dayEndHour" -> dayEndHour = nextInt(field)
+                "dayEndMinute" -> dayEndMinute = nextInt(field)
+                "language" -> {
+                    val raw = nextString(field)
+                    language = AppLanguage.entries.firstOrNull { it.tag == raw }
+                        ?: throw BackupException(Failure.INVALID_VALUE, "unknown language")
+                }
+                "themeMode" -> {
+                    val raw = nextString(field)
+                    themeMode = ThemeMode.entries.firstOrNull { it.name == raw }
+                        ?: throw BackupException(Failure.INVALID_VALUE, "unknown theme")
+                }
+                else -> skipValue()
+            }
+        }
+        endObject()
+
+        if (idleAlertMinutes !in 0..120 || dayEndHour !in 0..23 || dayEndMinute !in 0..59) {
+            throw BackupException(Failure.INVALID_VALUE, "settings are outside the accepted ranges")
+        }
+
+        return GlobalSettings(
+            soundEnabled = soundEnabled,
+            vibrateEnabled = vibrateEnabled,
+            vibrationPattern = vibrationPattern,
+            alwaysOnDisplay = alwaysOnDisplay,
+            autostartPomodoros = autostartPomodoros,
+            autostartBreaks = autostartBreaks,
+            idleAlertMinutes = idleAlertMinutes,
+            holdFinishedPhaseColor = holdFinishedPhaseColor,
+            dayEndHour = dayEndHour,
+            dayEndMinute = dayEndMinute,
+            language = language,
+            themeMode = themeMode
+        )
     }
 
     /** A field the format does not work without. Absent means this is not one of our files. */
