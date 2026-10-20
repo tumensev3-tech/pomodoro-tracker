@@ -208,16 +208,16 @@
     <string name="action_cancel">Cancel</string>
     <string name="action_ok">OK</string>
     <string name="section_data">Data</string>
-    <string name="action_export">Export projects and history</string>
-    <string name="action_export_summary">Saves a file you can keep anywhere. Settings are not included.</string>
+    <string name="action_export">Export Focuslot backup</string>
+    <string name="action_export_summary">Saves projects, history and app settings in one file.</string>
     <string name="action_import">Import from a file</string>
-    <string name="action_import_summary">Replaces everything currently in the app.</string>
+    <string name="action_import_summary">Restores projects, history and settings. Old backups without settings remain supported.</string>
     <string name="backup_file_name">focuslot-backup-%1$s.json</string>
     <string name="backup_working">Working…</string>
-    <string name="backup_exported">Projects saved: %1$d.</string>
-    <string name="backup_imported">Projects restored: %1$d.</string>
+    <string name="backup_exported">Backup saved. Projects: %1$d.</string>
+    <string name="backup_imported">Backup restored. Projects: %1$d.</string>
     <string name="backup_confirm_title">Replace everything?</string>
-    <string name="backup_confirm_body">Every project and all of its history will be deleted and replaced by the contents of the file. This cannot be undone.</string>
+    <string name="backup_confirm_body">Projects and history will be replaced by the backup. If the file contains settings, they will be restored too. This cannot be undone.</string>
     <string name="backup_confirm_action">Replace</string>
     <string name="backup_error_version">This file was written by a newer version of the app.</string>
     <string name="backup_error_malformed">This file is not a Focuslot backup, or it is damaged.</string>
@@ -243,4 +243,9 @@
     <string name="open_source_title">Open-source acknowledgements</string>
     <string name="open_source_intro">Focuslot includes substantial portions of the open-source Pomodoro Tracker project by drklo. The original copyright notice and MIT License are reproduced below.</string>
     <string name="project_row_cycle">%1$d/%2$d · %3$d sessions</string>
+    <string name="about_version">Version</string>
+    <string name="about_website">Website</string>
+    <string name="about_privacy">Privacy policy</string>
+    <string name="about_privacy_summary">How Focuslot handles data</string>
+    <string name="about_support">Support</string>
 </resources>
