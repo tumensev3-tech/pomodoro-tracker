@@ -207,16 +207,16 @@
     <string name="action_cancel">Отмена</string>
     <string name="action_ok">ОК</string>
     <string name="section_data">Данные</string>
-    <string name="action_export">Выгрузить проекты и историю</string>
-    <string name="action_export_summary">Сохраняет файл, который можно держать где угодно. Настройки в него не входят.</string>
-    <string name="action_import">Загрузить из файла</string>
-    <string name="action_import_summary">Заменяет всё, что сейчас в приложении.</string>
+    <string name="action_export">Сохранить резервную копию</string>
+    <string name="action_export_summary">Сохраняет проекты, историю и настройки приложения в одном файле.</string>
+    <string name="action_import">Восстановить из копии</string>
+    <string name="action_import_summary">Восстанавливает проекты, историю и настройки. Старые копии без настроек тоже поддерживаются.</string>
     <string name="backup_file_name">focuslot-backup-%1$s.json</string>
     <string name="backup_working">Идёт работа…</string>
-    <string name="backup_exported">Сохранено проектов: %1$d.</string>
-    <string name="backup_imported">Восстановлено проектов: %1$d.</string>
+    <string name="backup_exported">Резервная копия сохранена. Проектов: %1$d.</string>
+    <string name="backup_imported">Резервная копия восстановлена. Проектов: %1$d.</string>
     <string name="backup_confirm_title">Заменить всё?</string>
-    <string name="backup_confirm_body">Все проекты и вся их история будут удалены и заменены содержимым файла. Отменить это нельзя.</string>
+    <string name="backup_confirm_body">Проекты и история будут заменены данными из резервной копии. Если в файле есть настройки, они тоже восстановятся. Отменить это нельзя.</string>
     <string name="backup_confirm_action">Заменить</string>
     <string name="backup_error_version">Файл записан более новой версией приложения.</string>
     <string name="backup_error_malformed">Это не бэкап Focuslot либо файл повреждён.</string>
@@ -242,4 +242,9 @@
     <string name="open_source_title">Открытый исходный код</string>
     <string name="open_source_intro">Focuslot содержит существенные части открытого проекта Pomodoro Tracker от drklo. Ниже приведены исходное уведомление об авторском праве и полный текст лицензии MIT.</string>
     <string name="project_row_cycle">%1$d/%2$d · %3$d сесс.</string>
+    <string name="about_version">Версия</string>
+    <string name="about_website">Сайт</string>
+    <string name="about_privacy">Политика конфиденциальности</string>
+    <string name="about_privacy_summary">Как Focuslot работает с данными</string>
+    <string name="about_support">Поддержка</string>
 </resources>
