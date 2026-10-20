@@ -160,8 +160,6 @@ class TimerService : Service() {
     private fun buildNotification(): Notification {
         val state = engine.state.value
         val title = notificationTitle(state)
-        val elapsed = (state.totalSeconds - state.remainingSeconds).coerceAtLeast(0)
-
         val openIntent = PendingIntent.getActivity(
             this,
             0,
@@ -182,8 +180,6 @@ class TimerService : Service() {
             .setSilent(true)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setCategory(NotificationCompat.CATEGORY_PROGRESS)
-            // How far through the phase, without having to read the digits.
-            .setProgress(state.totalSeconds.coerceAtLeast(1), elapsed, false)
             // Public: the timer is the reason the phone is on the desk, so it belongs on the lock
             // screen. There is nothing private in "Работа · Помодоро".
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
@@ -438,14 +434,9 @@ class TimerService : Service() {
      * seconds, which the system draws on its own — so an unchanged signature means a re-post would
      * redraw the shade for nothing.
      */
-    private fun TimerState.notificationSignature(): String {
-        val step = if (totalSeconds > 0) {
-            (totalSeconds - remainingSeconds) * PROGRESS_STEPS / totalSeconds
-        } else {
-            0
-        }
-        return "$status|$phase|${project?.id}|$step"
-    }
+    private fun TimerState.notificationSignature(): String =
+        "$status|$phase|${project?.id}|$totalSeconds"
+
 
     private fun notificationTitle(state: TimerState): String {
         val projectName = state.project?.name?.takeIf { it.isNotBlank() }
@@ -489,8 +480,6 @@ class TimerService : Service() {
             WEARABLE_ALERT_PULSE_MS
         )
 
-        /** Progress-bar resolution; finer steps would only mean more re-posts nobody can see. */
-        private const val PROGRESS_STEPS = 100
         private const val ACTION_TOGGLE = "com.drklo.pomodoro.action.TOGGLE"
         private const val ACTION_RESET = "com.drklo.pomodoro.action.RESET"
         private const val ACTION_STOP_ACTIVITY = "com.drklo.pomodoro.action.STOP_ACTIVITY"
