@@ -382,7 +382,9 @@ fun SettingsScreen(
                         label = stringResource(R.string.about_website),
                         summary = FOCUSLOT_WEBSITE,
                         onClick = {
-                            context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(FOCUSLOT_WEBSITE)))
+                            runCatching {
+                                context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(FOCUSLOT_WEBSITE)))
+                            }
                         }
                     )
                     RowDivider()
@@ -390,7 +392,9 @@ fun SettingsScreen(
                         label = stringResource(R.string.about_privacy),
                         summary = stringResource(R.string.about_privacy_summary),
                         onClick = {
-                            context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(FOCUSLOT_PRIVACY)))
+                            runCatching {
+                                context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(FOCUSLOT_PRIVACY)))
+                            }
                         }
                     )
                     RowDivider()
@@ -398,9 +402,11 @@ fun SettingsScreen(
                         label = stringResource(R.string.about_support),
                         summary = FOCUSLOT_SUPPORT_EMAIL,
                         onClick = {
-                            context.startActivity(
-                                Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:$FOCUSLOT_SUPPORT_EMAIL"))
-                            )
+                            runCatching {
+                                context.startActivity(
+                                    Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:$FOCUSLOT_SUPPORT_EMAIL"))
+                                )
+                            }
                         }
                     )
                     RowDivider()
