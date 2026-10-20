@@ -487,7 +487,12 @@ private fun ProjectRow(
         Column(modifier = Modifier.weight(1f).padding(start = 14.dp)) {
             Text(project.name, fontWeight = FontWeight.Medium)
             Text(
-                "${project.focusMinutes}/${project.shortBreakMinutes} · ${project.pomodorosPerSession}🍅",
+                stringResource(
+                    R.string.project_row_cycle,
+                    project.focusMinutes,
+                    project.shortBreakMinutes,
+                    project.pomodorosPerSession
+                ),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
