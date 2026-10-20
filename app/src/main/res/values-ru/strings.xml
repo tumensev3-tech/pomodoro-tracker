@@ -2,14 +2,14 @@
     <string name="app_name">Focuslot</string>
 
     <!-- Phases -->
-    <string name="phase_pomodoro">Помодоро</string>
+    <string name="phase_pomodoro">Фокус</string>
     <string name="phase_focus">Фокус</string>
     <string name="phase_short_break">Пауза</string>
     <string name="phase_long_break">Длинная пауза</string>
 
     <!-- Timer notification -->
     <string name="timer_channel_name">Таймер</string>
-    <string name="timer_channel_desc">Показывает идущий таймер помодоро</string>
+    <string name="timer_channel_desc">Показывает работающий таймер Focuslot</string>
     <string name="notif_pause">Пауза</string>
     <string name="notif_resume">Продолжить</string>
     <string name="notif_reset">Сброс</string>
@@ -56,12 +56,12 @@
     <string name="cd_action_pause">поставить на паузу</string>
     <string name="cd_action_resume">продолжить</string>
     <string name="cd_action_change_phase">сменить фазу</string>
-    <string name="cd_session_progress">Помидорок сделано: %1$d из %2$d</string>
+    <string name="cd_session_progress">Фокус-сессий завершено: %1$d из %2$d</string>
 
     <!-- Reports -->
     <string name="title_reports">Отчёты</string>
     <string name="cd_reports">Отчёты</string>
-    <string name="tab_tomatoes">Томаты</string>
+    <string name="tab_tomatoes">Сессии</string>
     <string name="tab_projects">Проекты</string>
     <string name="tab_actual_time">Время</string>
     <string name="stat_actual_time">Фактическое время занятий</string>
@@ -72,7 +72,7 @@
     <string name="stat_today">Сегодня</string>
     <string name="stat_week">Неделя</string>
     <string name="stat_focus_time">Время фокуса</string>
-    <string name="stat_pomodoros">Помидорки</string>
+    <string name="stat_pomodoros">Фокус-сессии</string>
     <string name="unit_hours">ч</string>
     <string name="unit_minutes">м</string>
     <string name="chart_week_journal">Журнал недели</string>
@@ -84,7 +84,7 @@
     <string name="cd_next">Вперёд</string>
     <string name="chart_avg_max">сред. %1$s · макс %2$s</string>
     <string name="chart_focus_over_time">Время фокуса по периодам</string>
-    <string name="chart_pomodoros_over_time">Помидорки по периодам</string>
+    <string name="chart_pomodoros_over_time">Фокус-сессии по периодам</string>
     <string name="chart_time_distribution">Распределение времени</string>
     <string name="chart_time_by_project">Время по проектам</string>
     <string name="chart_total">Всего: %1$s</string>
@@ -100,10 +100,10 @@
 
     <!-- Выбор на графике (тап для деталей) -->
     <plurals name="pomodoros_count">
-        <item quantity="one">%d помидорка</item>
-        <item quantity="few">%d помидорки</item>
-        <item quantity="many">%d помидорок</item>
-        <item quantity="other">%d помидорки</item>
+        <item quantity="one">%d фокус-сессия</item>
+        <item quantity="few">%d фокус-сессии</item>
+        <item quantity="many">%d фокус-сессий</item>
+        <item quantity="other">%d фокус-сессии</item>
     </plurals>
     <string name="chart_metrics">%1$s · %2$s</string>
     <string name="chart_tap_hint_bar">Нажмите на столбец для деталей</string>
@@ -192,17 +192,17 @@
     <string name="label_presets">Пресеты</string>
     <string name="label_focus">Фокус</string>
     <string name="label_short_break">Короткая пауза</string>
-    <string name="label_pomodoros">Помидорок в сессии</string>
+    <string name="label_pomodoros">Фокус-сессий в цикле</string>
     <string name="label_daily_goal">Дневная цель</string>
-    <string name="label_pomodoro_color">Цвет помодоро</string>
+    <string name="label_pomodoro_color">Цвет фокуса</string>
     <string name="label_break_color">Цвет паузы</string>
     <string name="label_long_break">Длинная пауза</string>
     <string name="label_long_break_minutes">Длительность длинной паузы</string>
-    <string name="label_long_break_interval">После N помидорок</string>
+    <string name="label_long_break_interval">После N фокус-сессий</string>
     <string name="action_save">Сохранить</string>
     <!-- Deleting a project: soft delete, so the dialog promises the history stays. -->
     <string name="dialog_delete_project_title">Удалить проект?</string>
-    <string name="dialog_delete_project_text">«%1$s» исчезнет из карусели и списка. Уже сделанные помидорки останутся в отчётах.</string>
+    <string name="dialog_delete_project_text">«%1$s» исчезнет из карусели и списка. Завершённые фокус-сессии останутся в отчётах.</string>
     <string name="action_delete">Удалить</string>
     <string name="action_cancel">Отмена</string>
     <string name="action_ok">ОК</string>
@@ -211,7 +211,7 @@
     <string name="action_export_summary">Сохраняет файл, который можно держать где угодно. Настройки в него не входят.</string>
     <string name="action_import">Загрузить из файла</string>
     <string name="action_import_summary">Заменяет всё, что сейчас в приложении.</string>
-    <string name="backup_file_name">pomodoro-backup-%1$s.json</string>
+    <string name="backup_file_name">focuslot-backup-%1$s.json</string>
     <string name="backup_working">Идёт работа…</string>
     <string name="backup_exported">Сохранено проектов: %1$d.</string>
     <string name="backup_imported">Восстановлено проектов: %1$d.</string>
@@ -219,7 +219,7 @@
     <string name="backup_confirm_body">Все проекты и вся их история будут удалены и заменены содержимым файла. Отменить это нельзя.</string>
     <string name="backup_confirm_action">Заменить</string>
     <string name="backup_error_version">Файл записан более новой версией приложения.</string>
-    <string name="backup_error_malformed">Это не бэкап Pomodoro либо файл повреждён.</string>
+    <string name="backup_error_malformed">Это не бэкап Focuslot либо файл повреждён.</string>
     <string name="backup_error_values">В файле есть значение, которое приложение не принимает.</string>
     <string name="backup_error_empty">В файле нет ни одного проекта.</string>
     <string name="backup_error_file">Не удалось открыть файл.</string>
@@ -231,7 +231,7 @@
     <!-- Shown while the first launch is still seeding the default projects. -->
     <string name="empty_no_projects">Пока нет проектов</string>
     <!-- Fallback name when the user saves a project without typing one. -->
-    <string name="default_project_name">Помидорка</string>
+    <string name="default_project_name">Фокус</string>
     <!-- Leaving the project editor with unsaved edits. -->
     <string name="dialog_discard_title">Отменить изменения?</string>
     <string name="dialog_discard_text">Правки этого проекта не сохранены.</string>
@@ -241,4 +241,5 @@
     <string name="action_open_source_summary">Focuslot создан на базе Pomodoro Tracker от drklo и использует лицензию MIT.</string>
     <string name="open_source_title">Открытый исходный код</string>
     <string name="open_source_intro">Focuslot содержит существенные части открытого проекта Pomodoro Tracker от drklo. Ниже приведены исходное уведомление об авторском праве и полный текст лицензии MIT.</string>
+    <string name="project_row_cycle">%1$d/%2$d · %3$d сесс.</string>
 </resources>
