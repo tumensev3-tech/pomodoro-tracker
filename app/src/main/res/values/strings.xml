@@ -2,14 +2,14 @@
     <string name="app_name">Focuslot</string>
 
     <!-- Phases -->
-    <string name="phase_pomodoro">Pomodoro</string>
+    <string name="phase_pomodoro">Focus</string>
     <string name="phase_focus">Focus</string>
     <string name="phase_short_break">Break</string>
     <string name="phase_long_break">Long break</string>
 
     <!-- Timer notification -->
     <string name="timer_channel_name">Timer</string>
-    <string name="timer_channel_desc">Shows the running pomodoro timer</string>
+    <string name="timer_channel_desc">Shows the running Focuslot timer</string>
     <string name="notif_pause">Pause</string>
     <string name="notif_resume">Resume</string>
     <string name="notif_reset">Reset</string>
@@ -58,12 +58,12 @@
     <string name="cd_action_change_phase">change phase</string>
     <!-- Noun before the numbers on purpose: "%d pomodoros" would need plural forms, and Russian
          has three of them. Nothing follows the count, so nothing has to agree with it. -->
-    <string name="cd_session_progress">Pomodoros done: %1$d of %2$d</string>
+    <string name="cd_session_progress">Focus sessions done: %1$d of %2$d</string>
 
     <!-- Reports -->
     <string name="title_reports">Reports</string>
     <string name="cd_reports">Reports</string>
-    <string name="tab_tomatoes">Tomatoes</string>
+    <string name="tab_tomatoes">Sessions</string>
     <string name="tab_projects">Projects</string>
     <string name="tab_actual_time">Time</string>
     <string name="stat_actual_time">Actual activity time</string>
@@ -74,7 +74,7 @@
     <string name="stat_today">Today</string>
     <string name="stat_week">Week</string>
     <string name="stat_focus_time">Focus time</string>
-    <string name="stat_pomodoros">Pomodoros</string>
+    <string name="stat_pomodoros">Focus sessions</string>
     <string name="unit_hours">h</string>
     <string name="unit_minutes">m</string>
     <string name="chart_week_journal">Week journal</string>
@@ -86,7 +86,7 @@
     <string name="cd_next">Next</string>
     <string name="chart_avg_max">avg %1$s · max %2$s</string>
     <string name="chart_focus_over_time">Focus time over time</string>
-    <string name="chart_pomodoros_over_time">Pomodoros over time</string>
+    <string name="chart_pomodoros_over_time">Focus sessions over time</string>
     <!-- The donut: how the period splits up. Distinct from "Time per project" (the bars) on purpose. -->
     <string name="chart_time_distribution">Time distribution</string>
     <string name="chart_time_by_project">Time per project</string>
@@ -103,8 +103,8 @@
 
     <!-- Chart selection (tap to inspect) -->
     <plurals name="pomodoros_count">
-        <item quantity="one">%d pomodoro</item>
-        <item quantity="other">%d pomodoros</item>
+        <item quantity="one">%d focus session</item>
+        <item quantity="other">%d focus sessions</item>
     </plurals>
     <string name="chart_metrics">%1$s · %2$s</string>
     <string name="chart_tap_hint_bar">Tap a bar for details</string>
@@ -193,17 +193,17 @@
     <string name="label_presets">Presets</string>
     <string name="label_focus">Focus</string>
     <string name="label_short_break">Short break</string>
-    <string name="label_pomodoros">Pomodoros per session</string>
+    <string name="label_pomodoros">Focus sessions per cycle</string>
     <string name="label_daily_goal">Daily goal</string>
-    <string name="label_pomodoro_color">Pomodoro color</string>
+    <string name="label_pomodoro_color">Focus color</string>
     <string name="label_break_color">Break color</string>
     <string name="label_long_break">Long break</string>
     <string name="label_long_break_minutes">Long break length</string>
-    <string name="label_long_break_interval">After N pomodoros</string>
+    <string name="label_long_break_interval">After N focus sessions</string>
     <string name="action_save">Save</string>
     <!-- Deleting a project: soft delete, so the dialog promises the history stays. -->
     <string name="dialog_delete_project_title">Delete project?</string>
-    <string name="dialog_delete_project_text">“%1$s” will disappear from the carousel and the list. The pomodoros already completed stay in the reports.</string>
+    <string name="dialog_delete_project_text">“%1$s” will disappear from the carousel and the list. Completed focus sessions stay in the reports.</string>
     <string name="action_delete">Delete</string>
     <string name="action_cancel">Cancel</string>
     <string name="action_ok">OK</string>
@@ -212,7 +212,7 @@
     <string name="action_export_summary">Saves a file you can keep anywhere. Settings are not included.</string>
     <string name="action_import">Import from a file</string>
     <string name="action_import_summary">Replaces everything currently in the app.</string>
-    <string name="backup_file_name">pomodoro-backup-%1$s.json</string>
+    <string name="backup_file_name">focuslot-backup-%1$s.json</string>
     <string name="backup_working">Working…</string>
     <string name="backup_exported">Projects saved: %1$d.</string>
     <string name="backup_imported">Projects restored: %1$d.</string>
@@ -220,7 +220,7 @@
     <string name="backup_confirm_body">Every project and all of its history will be deleted and replaced by the contents of the file. This cannot be undone.</string>
     <string name="backup_confirm_action">Replace</string>
     <string name="backup_error_version">This file was written by a newer version of the app.</string>
-    <string name="backup_error_malformed">This file is not a Pomodoro backup, or it is damaged.</string>
+    <string name="backup_error_malformed">This file is not a Focuslot backup, or it is damaged.</string>
     <string name="backup_error_values">This file contains a value the app cannot accept.</string>
     <string name="backup_error_empty">This file contains no projects.</string>
     <string name="backup_error_file">The file could not be opened.</string>
@@ -232,7 +232,7 @@
     <!-- Shown while the first launch is still seeding the default projects. -->
     <string name="empty_no_projects">No projects yet</string>
     <!-- Fallback name when the user saves a project without typing one. -->
-    <string name="default_project_name">Pomodoro</string>
+    <string name="default_project_name">Focus</string>
     <!-- Leaving the project editor with unsaved edits. -->
     <string name="dialog_discard_title">Discard changes?</string>
     <string name="dialog_discard_text">The edits to this project have not been saved.</string>
@@ -242,4 +242,5 @@
     <string name="action_open_source_summary">Focuslot is based on Pomodoro Tracker by drklo and distributed under the MIT License.</string>
     <string name="open_source_title">Open-source acknowledgements</string>
     <string name="open_source_intro">Focuslot includes substantial portions of the open-source Pomodoro Tracker project by drklo. The original copyright notice and MIT License are reproduced below.</string>
+    <string name="project_row_cycle">%1$d/%2$d · %3$d sessions</string>
 </resources>
