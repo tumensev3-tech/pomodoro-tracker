@@ -1,5 +1,6 @@
 package com.drklo.pomodoro.ui.settings
 
+import android.content.Intent
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -68,6 +69,10 @@ import com.drklo.pomodoro.util.BatteryOptimization
 import com.drklo.pomodoro.util.findActivity
 import java.time.LocalDate
 
+private const val FOCUSLOT_WEBSITE = "https://xproject.space"
+private const val FOCUSLOT_PRIVACY = "https://xproject.space/focuslot/privacy"
+private const val FOCUSLOT_SUPPORT_EMAIL = "tumensev@xproject.space"
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
@@ -79,6 +84,9 @@ fun SettingsScreen(
     val settings by viewModel.settings.collectAsStateWithLifecycle()
     val projects by viewModel.projects.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val appVersion = remember(context) {
+        context.packageManager.getPackageInfo(context.packageName, 0).versionName.orEmpty()
+    }
 
     // The project the user asked to delete, held until they confirm.
     var pendingDelete by remember { mutableStateOf<Project?>(null) }
@@ -153,7 +161,7 @@ fun SettingsScreen(
                 TextButton(
                     onClick = {
                         pendingImport = null
-                        viewModel.importFrom(uri)
+                        viewModel.importFrom(uri) { context.findActivity()?.recreate() }
                     }
                 ) { Text(stringResource(R.string.backup_confirm_action)) }
             },
@@ -365,6 +373,37 @@ fun SettingsScreen(
             // --- About / licenses ---
             item {
                 SettingsGroup(stringResource(R.string.section_about)) {
+                    InfoRow(
+                        label = stringResource(R.string.about_version),
+                        summary = appVersion
+                    )
+                    RowDivider()
+                    ActionRow(
+                        label = stringResource(R.string.about_website),
+                        summary = FOCUSLOT_WEBSITE,
+                        onClick = {
+                            context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(FOCUSLOT_WEBSITE)))
+                        }
+                    )
+                    RowDivider()
+                    ActionRow(
+                        label = stringResource(R.string.about_privacy),
+                        summary = stringResource(R.string.about_privacy_summary),
+                        onClick = {
+                            context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(FOCUSLOT_PRIVACY)))
+                        }
+                    )
+                    RowDivider()
+                    ActionRow(
+                        label = stringResource(R.string.about_support),
+                        summary = FOCUSLOT_SUPPORT_EMAIL,
+                        onClick = {
+                            context.startActivity(
+                                Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:$FOCUSLOT_SUPPORT_EMAIL"))
+                            )
+                        }
+                    )
+                    RowDivider()
                     ActionRow(
                         label = stringResource(R.string.action_open_source),
                         summary = stringResource(R.string.action_open_source_summary),
@@ -373,6 +412,19 @@ fun SettingsScreen(
                 }
             }
         }
+    }
+}
+
+/** A non-interactive information line, used for app version and similar metadata. */
+@Composable
+private fun InfoRow(label: String, summary: String) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 10.dp)
+    ) {
+        Text(label)
+        Caption(summary)
     }
 }
 
