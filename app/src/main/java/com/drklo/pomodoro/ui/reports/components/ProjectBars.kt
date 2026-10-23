@@ -49,60 +49,66 @@ fun ProjectBars(
     val highlightColor = MaterialTheme.colorScheme.surfaceVariant
 
     var selectedId by remember { mutableStateOf<Long?>(null) }
-    val selected = values.firstOrNull { it.projectId == selectedId }
 
     Column(modifier = modifier.fillMaxWidth()) {
+        Text(
+            text = stringResource(R.string.chart_tap_hint_project),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
         Column(
             modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             values.forEach { v ->
                 val isSelected = v.projectId == selectedId
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(8.dp))
-                        .clickable { selectedId = if (isSelected) null else v.projectId }
-                        .background(if (isSelected) highlightColor else Color.Transparent)
-                        .padding(horizontal = 6.dp, vertical = 4.dp)
-                ) {
-                    Row(modifier = Modifier.fillMaxWidth()) {
-                        Text(
-                            v.name,
-                            modifier = Modifier.weight(1f),
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                        Text(valueFormatter(v.value), fontWeight = FontWeight.Medium)
-                    }
-                    Box(
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(top = 4.dp)
-                            .height(10.dp)
-                            .clip(RoundedCornerShape(5.dp))
-                            .background(trackColor)
+                            .clip(RoundedCornerShape(8.dp))
+                            .clickable { selectedId = if (isSelected) null else v.projectId }
+                            .background(if (isSelected) highlightColor else Color.Transparent)
+                            .padding(horizontal = 6.dp, vertical = 6.dp)
                     ) {
+                        Row(modifier = Modifier.fillMaxWidth()) {
+                            Text(
+                                v.name,
+                                modifier = Modifier.weight(1f),
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                            Text(valueFormatter(v.value), fontWeight = FontWeight.Medium)
+                        }
                         Box(
                             modifier = Modifier
-                                .fillMaxWidth(v.value / max)
+                                .fillMaxWidth()
+                                .padding(top = 4.dp)
                                 .height(10.dp)
                                 .clip(RoundedCornerShape(5.dp))
-                                .background(Color(v.colorArgb))
+                                .background(trackColor)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth(v.value / max)
+                                    .height(10.dp)
+                                    .clip(RoundedCornerShape(5.dp))
+                                    .background(Color(v.colorArgb))
+                            )
+                        }
+                    }
+                    if (isSelected) {
+                        val share = if (total > 0f) (v.value / total * 100f).roundToInt() else 0
+                        ChartTooltip(
+                            title = v.name,
+                            focusSec = v.focusSec,
+                            pomodoros = v.pomodoros,
+                            hint = "",
+                            note = stringResource(R.string.chart_share_of_total, share)
                         )
                     }
                 }
             }
         }
-
-        ChartTooltip(
-            title = selected?.name,
-            focusSec = selected?.focusSec ?: 0,
-            pomodoros = selected?.pomodoros ?: 0,
-            hint = stringResource(R.string.chart_tap_hint_project),
-            note = selected?.let {
-                val share = if (total > 0f) (it.value / total * 100f).roundToInt() else 0
-                stringResource(R.string.chart_share_of_total, share)
-            }
-        )
     }
 }
