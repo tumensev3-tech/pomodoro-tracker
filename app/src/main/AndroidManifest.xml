@@ -35,7 +35,7 @@
             android:foregroundServiceType="specialUse">
             <property
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
-                android:value="pomodoro_timer" />
+                android:value="focus_timer" />
         </service>
 
         <service
