@@ -248,4 +248,11 @@
     <string name="about_privacy">Privacy policy</string>
     <string name="about_privacy_summary">How Focuslot handles data</string>
     <string name="about_support">Support</string>
+
+    <string name="section_transfer">Move to Focuslot 1.0</string>
+    <string name="transfer_export_title">Prepare transfer to Focuslot 1.0</string>
+    <string name="transfer_export_summary">Saves projects, history and settings to a transfer file. Install the store version, then restore this file there.</string>
+    <string name="transfer_import_title">Move data from the test version</string>
+    <string name="transfer_import_summary">Choose the focuslot-transfer.json file created by the test version. Projects, history and settings will be restored.</string>
+    <string name="transfer_file_name">focuslot-transfer.json</string>
 </resources>
