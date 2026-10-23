@@ -39,3 +39,31 @@ jobs:
           name: pomodoro-custom-v1.2-apk
           path: app/build/outputs/apk/debug/app-debug.apk
           retention-days: 30
+
+      # Release-prep intentionally has no private signing key in GitHub. Build the real store
+      # variant unsigned, then sign it offline with the long-lived Focuslot release key.
+      - name: Build unsigned release APK
+        if: github.ref_name == 'focuslot-release-prep'
+        run: ./gradlew --no-daemon :app:assembleRelease
+
+      - name: Collect signing tools
+        if: github.ref_name == 'focuslot-release-prep'
+        shell: bash
+        run: |
+          set -euo pipefail
+          BUILD_TOOLS="$(find "$ANDROID_HOME/build-tools" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -1)"
+          mkdir -p release-tools/lib
+          cp "$BUILD_TOOLS/apksigner" release-tools/
+          cp "$BUILD_TOOLS/zipalign" release-tools/
+          cp "$BUILD_TOOLS/lib/apksigner.jar" release-tools/lib/
+          find app/build/outputs/apk/release -maxdepth 1 -type f -name '*.apk' -print
+
+      - name: Upload unsigned release package
+        if: github.ref_name == 'focuslot-release-prep'
+        uses: actions/upload-artifact@v7
+        with:
+          name: focuslot-1.0.0-unsigned-release
+          path: |
+            app/build/outputs/apk/release/*.apk
+            release-tools/
+          retention-days: 7
