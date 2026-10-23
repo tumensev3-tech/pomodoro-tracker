@@ -108,7 +108,7 @@
     <string name="chart_metrics">%1$s · %2$s</string>
     <string name="chart_tap_hint_bar">Нажмите на столбец для деталей</string>
     <string name="chart_tap_hint_slice">Нажмите на сектор для деталей</string>
-    <string name="chart_tap_hint_project">Нажмите на проект для деталей</string>
+    <string name="chart_tap_hint_project">Нажмите на активность, чтобы посмотреть детали</string>
     <string name="chart_tap_hint_day">Нажмите на день для деталей</string>
     <string name="chart_share_of_total">%d%% от периода</string>
     <string name="chart_goal_progress">Цель: %1$d из %2$d</string>
