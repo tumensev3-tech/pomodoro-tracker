@@ -84,6 +84,7 @@ fun SettingsScreen(
     val settings by viewModel.settings.collectAsStateWithLifecycle()
     val projects by viewModel.projects.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val isStoreBuild = context.packageName == "space.xproject.focuslot"
     val appVersion = remember(context) {
         context.packageManager.getPackageInfo(context.packageName, 0).versionName.orEmpty()
     }
@@ -121,6 +122,7 @@ fun SettingsScreen(
     ) { uri -> pendingImport = uri }
 
     val suggestedFileName = stringResource(R.string.backup_file_name, LocalDate.now().toString())
+    val transferFileName = stringResource(R.string.transfer_file_name)
 
     var showOpenSourceNotice by remember { mutableStateOf(false) }
     if (showOpenSourceNotice) {
@@ -312,6 +314,27 @@ fun SettingsScreen(
                             Caption(stringResource(R.string.battery_summary))
                         }
                     }
+                }
+            }
+
+            // --- Transfer from the beta/test package to the store package ---
+            item {
+                SettingsGroup(stringResource(R.string.section_transfer)) {
+                    ActionRow(
+                        label = stringResource(
+                            if (isStoreBuild) R.string.transfer_import_title else R.string.transfer_export_title
+                        ),
+                        summary = stringResource(
+                            if (isStoreBuild) R.string.transfer_import_summary else R.string.transfer_export_summary
+                        ),
+                        onClick = {
+                            if (isStoreBuild) {
+                                importLauncher.launch(arrayOf("*/*"))
+                            } else {
+                                exportLauncher.launch(transferFileName)
+                            }
+                        }
+                    )
                 }
             }
 
