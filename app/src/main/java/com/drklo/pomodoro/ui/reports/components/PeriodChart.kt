@@ -44,15 +44,26 @@ fun PeriodChart(
         buildStackedBars(logs, buckets, projects, locale, valueOf)
     }
 
-    val prevBuckets = remember(aggregation, page, today) { bucketsFor(aggregation, today, page + 1, locale) }
-
-    // Compare like with like: only as many days of the previous period as have elapsed in this one.
-    // Measured against a whole previous period, an unfinished one reads as a collapse every time.
-    val elapsed = elapsedDaysIn(buckets.first().start, buckets.last().endInclusive, today)
-    val periodStart = buckets.first().start
-    val prevStart = prevBuckets.first().start
-    val currentTotal = sumInRange(logs, periodStart, periodStart.plusDays(elapsed - 1), valueOf)
-    val prevTotal = sumInRange(logs, prevStart, prevStart.plusDays(elapsed - 1), valueOf)
+    // Compare the newest bucket currently on screen with the immediately preceding bucket.
+    // The old implementation compared two whole chart pages (6 months vs the previous 6 months,
+    // 8 weeks vs the previous 8 weeks, etc.), which made "Month" fail to report the expected
+    // month-to-month change.
+    val currentBucket = buckets.last()
+    val previousStart = when (aggregation) {
+        Aggregation.DAY -> currentBucket.start.minusDays(1)
+        Aggregation.WEEK -> currentBucket.start.minusWeeks(1)
+        Aggregation.MONTH -> currentBucket.start.minusMonths(1)
+    }
+    val previousEnd = when (aggregation) {
+        Aggregation.DAY -> previousStart
+        Aggregation.WEEK -> previousStart.plusDays(6)
+        Aggregation.MONTH -> previousStart.plusMonths(1).minusDays(1)
+    }
+    val elapsed = elapsedDaysIn(currentBucket.start, currentBucket.endInclusive, today)
+    val currentEnd = minOf(currentBucket.start.plusDays(elapsed - 1), currentBucket.endInclusive)
+    val previousComparableEnd = minOf(previousStart.plusDays(elapsed - 1), previousEnd)
+    val currentTotal = sumInRange(logs, currentBucket.start, currentEnd, valueOf)
+    val prevTotal = sumInRange(logs, previousStart, previousComparableEnd, valueOf)
 
     // The average is over the buckets that actually finished; counting today's half-done one as a
     // full one drags the average down every morning.
@@ -69,7 +80,14 @@ fun PeriodChart(
         summaryFormatter(average.toFloat()),
         summaryFormatter(maxTotal)
     )
-    val compare = comparisonLine(currentTotal, prevTotal, stringResource(R.string.prev_period), summaryFormatter)
+    val compareLabel = stringResource(
+        when (aggregation) {
+            Aggregation.DAY -> R.string.prev_day
+            Aggregation.WEEK -> R.string.prev_week
+            Aggregation.MONTH -> R.string.prev_month
+        }
+    )
+    val compare = comparisonLine(currentTotal, prevTotal, compareLabel, summaryFormatter)
 
     ChartCard(
         title = title,
@@ -84,7 +102,7 @@ fun PeriodChart(
             },
             paging = Paging(
                 page = page,
-                canGoBack = earliest != null && periodStart.isAfter(earliest),
+                canGoBack = earliest != null && buckets.first().start.isAfter(earliest),
                 onChange = {
                     page = it.coerceAtLeast(0)
                     selected = null
