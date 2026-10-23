@@ -109,7 +109,7 @@
     <string name="chart_metrics">%1$s · %2$s</string>
     <string name="chart_tap_hint_bar">Tap a bar for details</string>
     <string name="chart_tap_hint_slice">Tap a slice for details</string>
-    <string name="chart_tap_hint_project">Tap a project for details</string>
+    <string name="chart_tap_hint_project">Tap an activity to show details</string>
     <string name="chart_tap_hint_day">Tap a day for details</string>
     <string name="chart_share_of_total">%d%% of the period</string>
     <string name="chart_goal_progress">Goal: %1$d of %2$d</string>
