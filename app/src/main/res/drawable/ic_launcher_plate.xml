@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Opaque fallback behind the selected artwork. Adaptive icon backgrounds must stay filled
+         under every launcher mask; the raster itself keeps its original rounded corners. -->
+    <item android:drawable="@drawable/ic_launcher_background" />
+    <item android:drawable="@drawable/focuslot_launcher_art" />
+</layer-list>
