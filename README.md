@@ -1,228 +1,157 @@
-# Pomodoro Tracker
+# Focuslot
 
-[![CI](https://github.com/Dr-klo/pomodoro-tracker/actions/workflows/ci.yml/badge.svg)](https://github.com/Dr-klo/pomodoro-tracker/actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+Focuslot is a minimalist Android focus timer for people who want to divide work and everyday tasks
+into clear time slots without accounts, ads, cloud sync or unnecessary screens.
 
-Native Android Pomodoro timer with per-project presets, a classic circular dial, and a full
-statistics module. Built in Kotlin + Jetpack Compose. Offline, no accounts, no monetization.
+- Android 10+
+- Kotlin + Jetpack Compose
+- offline-first: no Internet permission
+- Russian and English UI
+- per-activity focus/break presets
+- free timer for open-ended activities
+- foreground timer with notification controls
+- Galaxy Fit2 / Samsung notification workflow
+- day/week/month statistics and per-activity breakdown
+- backup/restore of activities, history and global settings
 
-**[⬇ Download the APK](https://github.com/Dr-klo/pomodoro-tracker/releases/latest)** — Android 10+, ~2.9 MB, no dependencies.
+## Status
 
-> Installing takes one extra tap: the build is signed with a personal key rather than distributed
-> through Google Play, so Android will warn about an unknown source and Play Protect may ask again.
-> Each release page publishes the APK's SHA-256 if you want to check what you downloaded.
+The application is being prepared for its first public release as **Focuslot 1.0.0**.
+The store package is:
 
-See [PRD.md](PRD.md) for the full product spec.
+`space.xproject.focuslot`
 
-## Screenshots
+A separate compatibility build is used during beta testing so existing tester data can be preserved.
+The app contains a guided transfer flow: the beta build exports `focuslot-transfer.json`, and the
+store build restores that file.
 
-| Running | Paused | Landscape |
-|---|---|---|
-| <img src="docs/screenshots/01-main-running.png" width="230"> | <img src="docs/screenshots/02-main-paused.png" width="230"> | <img src="docs/screenshots/03-main-landscape.png" width="230"> |
+## Privacy
 
-| Focus time & week journal | Month goals & trend | Per-project breakdown |
-|---|---|---|
-| <img src="docs/screenshots/04-reports-tomatoes.png" width="230"> | <img src="docs/screenshots/05-reports-calendar.png" width="230"> | <img src="docs/screenshots/06-reports-projects.png" width="230"> |
+Focuslot stores its data locally on the device. The current Android application does not request
+Internet access and does not include advertising or third-party analytics.
 
-| Settings & presets | Russian locale |
-|---|---|
-| <img src="docs/screenshots/07-settings.png" width="230"> | <img src="docs/screenshots/08-localization-ru.png" width="230"> |
+The privacy-policy source is in
+[docs/FOCUSLOT_PRIVACY.md](docs/FOCUSLOT_PRIVACY.md). The public release links to:
 
-## Features
+https://xproject.space/focuslot/privacy
 
-- **Circular dial** that empties as the countdown runs, with a clock hand and tap-to-pause /
-  hold-to-reset gestures.
-- **Projects** (Work, Study, Reading, …) — each with its own focus/break durations, pomodoro
-  count, colors, daily goal, and long break. Swipe to switch (only while stopped/paused).
-- **Single global timer** kept alive by a foreground service; controllable from the notification.
-- **Phase color fills the background**, white foreground; manual phase switching (pomodoro /
-  break / long break) by tapping the phase label.
-- **Idle alert**: a gentle screen-color strobe every N minutes when a pomodoro/pause is left idle.
-- **Always-on display**, **autostart** (pomodoros and breaks separately), **vibration**, crisp
-  synthesized **sounds**, **daily goal** with a fanfare, configurable **end-of-day** time.
-- **Reports** — two tabs (Tomatoes / Projects): week journal, monthly goals calendar with donut
-  rings, focus-time & pomodoro-count stacked bars, per-project bars, and a distribution donut.
-  Day/Week/Month aggregation, period navigation, and "vs previous period" comparisons.
-- **EN / RU** localization and **System / Light / Dark** theme.
+## Open-source attribution
 
-## Tech stack
+Focuslot is based on the open-source
+[Pomodoro Tracker](https://github.com/Dr-klo/pomodoro-tracker) project by **drklo** and contains
+substantial portions of that codebase.
 
-- **Language:** Kotlin 2.3, `minSdk 29` (Android 10), `target/compileSdk 37`
-- **UI:** Jetpack Compose (Material 3), custom `Canvas` charts and dial
-- **Persistence:** Room (`pomodoro.db`) for projects, daily counts, and the pomodoro log;
-  DataStore Preferences for settings
-- **Async:** Kotlin Coroutines + Flow / StateFlow
-- **DI:** manual service locator (`AppContainer`) held by the `Application`
-- **Build:** Gradle 9 (KTS) with a version catalog (`gradle/libs.versions.toml`), AGP 9.3, KSP
+The original project is licensed under the MIT License. Its copyright notice and the MIT text are
+preserved in [LICENSE](LICENSE) and are also available inside Focuslot under **Settings → About →
+Open-source acknowledgements**.
+
+Focuslot's product name, UI direction and subsequent modifications are maintained in this fork.
+
+## Main features
+
+### Timer
+
+- circular focus timer with pause/resume and stop
+- custom activities with their own focus and break durations
+- short and long breaks
+- +5 / +10 / +15 minute extension
+- optional autostart
+- configurable sound and vibration patterns
+- always-on-display option
+- logical end-of-day boundary
+- battery-optimization guidance for reliable background operation
+
+### Notifications and wearable use
+
+The running timer is kept by an Android foreground service. The system chronometer renders the
+countdown without the app reposting the notification every second. This avoids unnecessary
+notification churn and is important for Samsung/Galaxy Fit2 mirroring.
+
+Phase-end alerts provide actions for moving to the next phase, extending the current one or
+stopping the activity.
+
+### Reports
+
+- focus time and completed focus sessions
+- week journal
+- daily-goal calendar
+- day/week/month aggregation
+- comparison with the previous matching period
+- time by activity
+- distribution chart
+- tap-to-expand activity details
+- actual-time statistics for the free timer
+
+### Backup and migration
+
+A Focuslot backup contains:
+
+- activities and their presets
+- the retained activity history
+- sound/vibration/background settings
+- theme and language
+- end-of-day and autostart settings
+
+Older backup files that predate settings backup remain supported.
+
+For beta → store migration:
+
+1. In the beta build, open **Settings → Move to Focuslot 1.0 → Prepare transfer**.
+2. Save `focuslot-transfer.json`.
+3. Install the store build (`space.xproject.focuslot`).
+4. Open **Settings → Move to Focuslot 1.0 → Move data from the test version**.
+5. Select the transfer file and confirm restore.
+
+The two applications may coexist during the transfer because they use different Android package
+names.
+
+## Build
+
+Requirements: JDK 21 and an Android SDK capable of compiling API 37.
+
+```bash
+./gradlew :app:assembleDebug
+./gradlew :app:testDebugUnitTest
+./gradlew :app:detekt
+./gradlew :app:lintDebug
+```
+
+### Release signing
+
+Release signing is read from `~/.pomodoro/keystore.properties` (or the project-root
+`keystore.properties` for a local checkout):
+
+```properties
+storeFile=/absolute/path/to/focuslot-release.jks
+storePassword=...
+keyAlias=focuslot
+keyPassword=...
+```
+
+The keystore itself and all passwords must stay outside the repository. The first public release
+must keep the same signing key for all later updates and, ideally, for every Android store.
+
+The release APK is built with:
+
+```bash
+./gradlew :app:assembleRelease
+```
 
 ## Project structure
 
 ```
 app/src/main/java/com/drklo/pomodoro/
-├─ PomodoroApp.kt          Application: owns AppContainer, seeds default projects
-├─ MainActivity.kt         setContent + NavHost + theme/locale wiring
-├─ data/
-│  ├─ AppContainer.kt      DB, repositories, and the single TimerEngine
-│  ├─ LogicalDay.kt        end-of-day boundary → logical date/day key
-│  ├─ model/               Project, Phase, TimerStatus, GlobalSettings, PomodoroLog, enums
-│  ├─ db/                  Room entities, DAOs, AppDatabase (+ migration), mappers
-│  └─ repository/          Project / Stats / Settings repositories
-├─ timer/
-│  ├─ TimerEngine.kt       single source of truth: state machine, ticking, idle alert
-│  ├─ TimerService.kt      foreground notification + controls
-│  ├─ TimerEffects.kt      sound (synthesized) + vibration
-│  └─ ToneSynth.kt         runtime WAV "ding" generator
-├─ ui/
-│  ├─ main/                MainScreen + dial / bullets / fanfare components, MainViewModel
-│  ├─ reports/             ReportsScreen, aggregation logic, chart components
-│  ├─ settings/            Settings + project editor screens and view models
-│  ├─ common/Stepper.kt
-│  └─ theme/
-└─ util/                   LocaleHelper, BatteryOptimization, context helpers
+├─ data/        Room, DataStore, repositories, backup
+├─ timer/       timer engines, foreground services, effects
+├─ ui/main/     main timer and activity selection
+├─ ui/reports/  statistics and charts
+├─ ui/settings/ settings and activity editor
+└─ util/        locale and Android helpers
 ```
 
-### Architecture
+The Kotlin namespace is intentionally still `com.drklo.pomodoro`; changing it is not required for
+Android distribution. The public application ID is `space.xproject.focuslot`.
 
-`TimerEngine` is a singleton in `AppContainer` and the single source of truth for the one global
-timer. It exposes `StateFlow<TimerState>` + a `SharedFlow<TimerEvent>`; the UI (`MainViewModel` /
-Compose) and `TimerService` only observe it and forward user actions. Ticking is drift-free
-(computed from `SystemClock.elapsedRealtime` deadlines). Completed pomodoros persist the daily
-counter and a detailed log row used by the reports.
+## License
 
-```
-[MainScreen / ViewModels] ─┐                      ┌─ [Room: projects, day_stats, pomodoro_log]
-                           ├─→ [TimerEngine] ──────┤
-[TimerService (foreground)]┘   (single timer)      └─ [DataStore: settings]
-```
-
-## Build & run
-
-Requires Android 10+ (`minSdk 29`), portrait and landscape. Developed and manually verified on a
-Samsung Galaxy A50 / A51 running One UI.
-
-Android Studio is the simplest path: open the project, let the first Gradle sync run, and launch
-the `app` configuration. From the command line (use `gradlew.bat` on Windows):
-
-```bash
-./gradlew :app:assembleDebug     # -> app/build/outputs/apk/debug/app-debug.apk
-./gradlew :app:check             # unit tests, Android Lint, detekt (production + test sources)
-./gradlew :app:connectedAndroidTest   # Room migration + repository, needs a device or emulator
-adb install -r app/build/outputs/apk/debug/app-debug.apk
-```
-
-The Android SDK location comes from `local.properties`, which is not in version control; Android
-Studio writes it on first sync.
-
-> `connectedAndroidTest` uninstalls the app before it runs, and Android deletes the database with
-> it. Point it at an emulator, or back up first — this has cost real data twice.
-
-The Compose tests are deliberately *not* instrumented: they assert the semantics tree, which
-Compose builds without a renderer, so Robolectric runs them on the JVM in seconds and CI needs no
-emulator. The instrumented set is reserved for what genuinely needs Android — SQLite migrations and
-the repository against a real database.
-
-### Release builds
-
-Signing is configured only when a `keystore.properties` is found — first in `~/.pomodoro/`, then in
-the project root. The keystore and its passwords deliberately live **outside** the repository: a
-signing key leaked into a public history has no revocation path, and `.gitignore` alone is a single
-layer of defence.
-
-```properties
-# ~/.pomodoro/keystore.properties  — forward slashes: '\' escapes in .properties files
-storeFile=/absolute/path/to/release.jks
-storePassword=…
-keyAlias=…
-keyPassword=…
-```
-
-Without that file the app still builds; the release variant simply comes out unsigned.
-`./gradlew :app:assembleRelease` produces a ~2.9 MB APK (R8 and resource shrinking are on).
-
-### Samsung background note
-
-One UI can put apps into deep sleep and kill long-running timers. In-app: **Settings → Background
-reliability → Disable battery optimization**. If timers still die, remove the app from
-**Device care → Battery → Sleeping apps**.
-
-## Engineering process
-
-The codebase went through a full review, run as a documented protocol rather than a read-through.
-The working documents are in Russian — [docs/CODE_REVIEW_PLAN.md](docs/CODE_REVIEW_PLAN.md) is how
-to review, [docs/REVIEW_FINDINGS.md](docs/REVIEW_FINDINGS.md) is what was found — so what they
-contain is summarised here.
-
-**The protocol.** One stage per session, seven stages by area (linters, `timer/`, `data/`,
-`ui/reports/`, `ui/main/`, `ui/settings/`, cross-cutting). Review only the paths in scope; anything
-noticed outside them gets one line in a "seen out of scope" list and no investigation. Findings are
-never fixed while reviewing — fixes are a separate pass, so a review does not turn into a blind
-refactor. Every finding carries a cross-cutting ID, a severity, a `file:line`, and a **concrete
-failure scenario**: which inputs produce which wrong behaviour. The rule that keeps the list honest:
-
-> Without a scenario it is not a finding, it is an opinion.
-
-**What it produced.** 63 findings — 3 × P1, 24 × P2, 36 × P3 — and five themes larger than any
-single item. The sharpest: "how many pomodoros today" had three different answers, from the engine's
-in-memory counter, the `day_stats` table, and the `pomodoro_log` rows.
-
-The three P1s are a fair sample of what the protocol catches:
-
-| ID | Failure |
-|---|---|
-| `F-R1-01` | The day counter did not cross the logical-day boundary, so after midnight the daily goal could never fire again |
-| `F-R5-01` | Deleting the active project left the timer pointing at something gone: no carousel page matched it, and play, reset and swipe all stopped responding |
-| `F-R0-01` | The dial — tap to pause, drag to seek — was invisible to screen readers: raw pointer input over a Canvas announces no name, role or state. Fixed; the label written for it during the review had been sitting unattached ever since |
-
-**Decisions were recorded, including the refusals.** Four findings are `wontfix` and two `deferred`,
-each with its reasoning beside it. One product decision — that a deleted project's history must stay
-visible in reports — turned "clean up orphaned rows" into "implement soft delete", and the cascade
-delete that looked obvious on first reading became exactly the wrong fix.
-
-**Fixes shipped as ten packages, W0–W10, one commit each**, in a deliberate order: unblock the
-linters, then build something to verify with (a time seam, ports instead of concrete classes,
-exported Room schemas), then close the data-integrity theme in one pass, then threading.
-
-## Design decisions
-
-**Manual dependency injection.** `AppContainer` is a service locator held by the `Application`, not
-Hilt or Koin. At roughly 6 000 lines in a single module with one entry point, the whole dependency
-graph fits on one screen and reads top to bottom; a compiler plugin and a generated graph would add
-moving parts without removing any.
-
-What makes that work is not the container but the seams around it. `TimerEngine` depends on
-`SettingsSource`, `PomodoroStats`, `PhaseFeedback` and `TimeSource` — interfaces, not the classes
-implementing them — so tests substitute fakes and drive a virtual clock without a framework and
-without touching Android. The container exists to assemble those, and for nothing else.
-
-This stops being the right answer at a second module, a second entry point, or the first dependency
-that needs a scope narrower than "one instance per process". None of those is true yet.
-
-**One timer, owned by the engine.** `TimerEngine` is the single source of truth; the UI and the
-foreground service observe a `StateFlow` and forward user actions. Nothing else holds elapsed time,
-so the notification and the screen cannot disagree about it. Ticking is computed from a monotonic
-deadline rather than accumulated, so it does not drift.
-
-## Limitations
-
-Stated plainly, because a reader will find them anyway:
-
-- **Accessibility is started, not finished.** The main screen is covered — the dial announces its
-  phase, state and remaining time and can be activated by a screen reader (`F-R0-01`, closed) — but
-  Reports and Settings have had no equivalent pass, and the charts are Canvas drawings with nothing
-  behind them for a screen reader to read.
-- **UI tests cover components, not screens.** 86 tests run on the JVM: the timer engine,
-  aggregation, formatting and locale rules, plus ten Compose tests that pin the semantics of the
-  dial, the stepper and the segmented choice under Robolectric. Two instrumented tests cover Room
-  migration and project archiving on a real device. No test drives a whole screen or a user journey
-  end to end; those are verified by hand.
-- **One device family.** Developed and checked on a Samsung Galaxy A5x running Android 11.
-  `targetSdk` is current, but the runtime behaviour changes that come with it are untested on newer
-  Android versions.
-- **Sideload only.** Signed with a personal key rather than distributed through Google Play, and the
-  foreground service uses the `specialUse` type, which a store submission would have to argue for.
-- **72 accepted findings in the detekt baseline**, mostly unnamed constants in chart geometry and
-  audio synthesis. Formatting is fixed rather than recorded; what is left is real, if minor, debt.
-- **Statistics start at install.** Detailed history accrues from pomodoros completed afterwards;
-  earlier daily counts are not backfilled into the timeline.
-- **The in-progress interval does not survive process death** — on purpose. The completed count for
-  the day is restored; a half-finished pomodoro is not.
+See [LICENSE](LICENSE) for the preserved MIT license and original copyright notice.
