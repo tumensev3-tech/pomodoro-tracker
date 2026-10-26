@@ -1,51 +1,37 @@
 # Focuslot release signing
 
-The first public Focuslot Android release uses one locally generated signing key. The key itself and
-all passwords are deliberately kept outside this repository.
+## Public release identity
 
-## Certificate
-
-- Algorithm: RSA 4096
-- Alias: `focuslot`
-- Created: 2026-10-23
-- Valid until: 2054-03-10
-- SHA-256 certificate fingerprint:
+- Application ID: `space.xproject.focuslot`
+- First public version: `1.0.0`
+- First public versionCode: `1`
+- Key alias: `focuslot`
+- Certificate algorithm: RSA 4096 / SHA-384 self-signed certificate
+- Certificate validity: 26 Oct 2026 – 13 Mar 2054
+- Certificate SHA-256:
 
 ```
-10:36:DE:47:A5:E0:88:88:53:F4:7A:12:D6:FB:9C:9D:4E:44:4E:12:2A:5E:03:DA:C6:78:46:1D:E5:9A:B9:F5
+8C:D3:C6:7C:52:17:99:A3:73:36:E2:92:87:67:B1:00:93:DC:FB:3B:35:F8:73:59:1E:0C:E7:79:EC:D1:9E:EE
 ```
 
-This fingerprint is public information and may be used to verify release APKs.
+This fingerprint is safe to keep in the repository. The private keystore and passwords are not.
 
-## Local build
+## Required GitHub Actions secrets
 
-Keep `focuslot-release.jks` in secure storage and create `~/.pomodoro/keystore.properties`:
-
-```properties
-storeFile=/absolute/path/to/focuslot-release.jks
-storePassword=...
-keyAlias=focuslot
-keyPassword=...
-```
-
-Then:
-
-```bash
-./gradlew :app:assembleRelease
-```
-
-## GitHub Actions
-
-The manual `Build Focuslot release` workflow expects these repository secrets:
+The workflow `.github/workflows/focuslot-release.yml` expects:
 
 - `FOCUSLOT_RELEASE_KEYSTORE_B64`
 - `FOCUSLOT_RELEASE_STORE_PASSWORD`
 - `FOCUSLOT_RELEASE_KEY_ALIAS`
 - `FOCUSLOT_RELEASE_KEY_PASSWORD`
 
-The keystore is decoded only on the temporary Actions runner. It must never be committed.
+The keystore and its recovery bundle are deliberately stored outside the repository.
 
-## Backup rule
+## Rule for every future Android release
 
-Keep at least two independent copies of the keystore and credentials. All public Android releases
-should use the same certificate so users can update Focuslot without reinstalling.
+Do not create a new signing key for an ordinary update. Reuse the Focuslot release key above.
+Android and RuStore use the signing certificate to decide whether an APK is a legitimate update to
+an installed application.
+
+If Focuslot is later published to another Android store, prefer the same signing certificate there
+as well, so installs from different stores remain update-compatible.
