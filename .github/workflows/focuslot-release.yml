@@ -1,6 +1,8 @@
 name: Build Focuslot release
 
 on:
+  push:
+    branches: [focuslot-release-prep]
   workflow_dispatch:
 
 permissions:
