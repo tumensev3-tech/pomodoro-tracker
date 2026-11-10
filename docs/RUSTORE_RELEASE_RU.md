@@ -1,38 +1,48 @@
-# Focuslot — RuStore release package (RU)
+# Focuslot — финальный пакет для RuStore (RU)
 
-## App identity
+## Идентичность релиза
 
-- Name: **Focuslot**
+- Название: **Focuslot**
 - Package: `space.xproject.focuslot`
-- Version: **1.0.0**
+- Версия: **1.0.0**
 - Version code: **1**
-- Category: Productivity / Тайм-менеджмент
-- Price for 1.0: Free
-- Support: `tumensev@xproject.space`
-- Website: `https://xproject.space`
-- Privacy policy: `https://xproject.space/focuslot/privacy`
+- Категория RuStore: **Полезные инструменты** (`tools`)
+- Возрастная категория: **0+**
+- Цена: **Бесплатно**
+- Поддержка: `tumensev@xproject.space`
+- Сайт: `https://xproject.space`
+- Политика конфиденциальности: `https://xproject.space/focuslot/privacy`
 
-## Short description
+## Поисковые теги
+
+До 5:
+
+1. таймер
+2. фокус
+3. продуктивность
+4. тайм-менеджмент
+5. помодоро
+
+## Краткое описание
 
 Минималистичный таймер фокус-сессий для работы и повседневных дел.
 
-## Full description
+## Подробное описание
 
-**Focuslot** помогает делить работу, учёбу, чтение, домашние дела и другие занятия на понятные
-временные слоты.
+**Focuslot** — простой таймер для работы, учёбы, чтения, домашних дел и других занятий, которые
+удобнее разбивать на понятные временные слоты.
 
 Создавайте свои активности, задавайте для каждой длительность фокуса и пауз и запускайте таймер
-одним нажатием. Во время работы Focuslot не перегружает экран лишними элементами, а после завершения
-слота предлагает перейти к перерыву, продолжить работу или добавить +5, +10 либо +15 минут.
+одним нажатием. Во время активной сессии интерфейс остаётся минималистичным, а после завершения
+слота можно перейти к перерыву, продолжить работу или добавить +5, +10 либо +15 минут.
 
-Что есть в Focuslot:
+В Focuslot есть:
 
 - отдельные настройки времени для каждой активности;
 - короткие и длинные паузы;
 - свободный таймер для занятий без заранее заданной длительности;
-- управление из уведомления;
-- вибрация и звуковые сигналы;
-- поддержка сценария с Samsung Galaxy Fit2 через системные уведомления;
+- управление таймером из системного уведомления;
+- настраиваемые звук и вибрация;
 - статистика по дням, неделям и месяцам;
 - сравнение с предыдущим периодом;
 - статистика по отдельным активностям;
@@ -40,111 +50,133 @@
 - светлая и тёмная темы;
 - русский и английский языки.
 
-Focuslot работает **офлайн**, не требует регистрации и не содержит рекламы или сторонней аналитики.
+Focuslot работает **офлайн**, не требует регистрации, не содержит рекламы и сторонней аналитики.
 
-Focuslot создан на базе открытого проекта Pomodoro Tracker by drklo (MIT License) и существенно
+Focuslot создан на базе открытого проекта **Pomodoro Tracker** by drklo (MIT License) и существенно
 переработан. Уведомление об исходном проекте и текст лицензии доступны внутри приложения.
 
-## What's new — 1.0.0
+## Что нового — 1.0.0
 
 Первый публичный выпуск Focuslot.
 
-Таймер фокус-сессий и свободный таймер, пользовательские активности, паузы и продление слотов,
-статистика, управление уведомлениями, резервное копирование и перенос данных из тестовой версии.
+Таймер фокус-сессий и свободный таймер, пользовательские активности, короткие и длинные паузы,
+продление слотов, статистика, уведомления, резервное копирование и восстановление данных.
 
-## Screenshot plan
+## Финальный APK
 
-Recommended portrait screenshots (phone, Russian UI):
+- Signed APK: `Focuslot 1.0.0`
+- Package: `space.xproject.focuslot`
+- Version code: `1`
+- APK SHA-256:
+  `13d73dd23bab557095c2be17feb0c179b4d38cc0b15b42a6f28f9f5fae1c6788`
+- Certificate SHA-256:
+  `8cd3c67c521799a37336e2928767b10093dcfb3b35f873591e0ce779ecd19eee`
+- APK Signature Scheme v3: verified
 
-1. **Main timer — running**
-   - activity name visible;
-   - clean countdown screen;
-   - no debug/test labels.
-
-2. **Choose activity**
-   - several realistic activities with icons;
-   - demonstrates that Focuslot is not tied to one fixed Pomodoro preset.
-
-3. **Statistics — month**
-   - month aggregation selected;
-   - visible comparison with previous month;
-   - at least several bars/data points.
-
-4. **Statistics — activities**
-   - per-activity bars;
-   - one activity expanded to show its details.
-
-5. **Settings / backup**
-   - vibration options or backup/transfer block;
-   - shows practical configuration without making settings look crowded.
-
-Optional sixth screenshot:
-- phase-end notification with +5/+10/+15 controls.
-
-## Permissions / store declaration notes
+## Разрешения / декларация
 
 ### POST_NOTIFICATIONS
-Purpose: show the running timer, phase-end alerts and timer controls.
+
+Показывает работающий таймер, уведомления об окончании фазы и кнопки управления таймером.
 
 ### VIBRATE
-Purpose: user-configurable vibration when a focus or break phase ends.
+
+Используется для выбранного пользователем вибросигнала после завершения фокус-сессии или перерыва.
 
 ### FOREGROUND_SERVICE / FOREGROUND_SERVICE_SPECIAL_USE
-Purpose: keep a user-started timer accurate and visible while Focuslot is in the background or the
-screen is locked.
+
+Поддерживает запущенный пользователем таймер в фоне и при выключенном экране.
 
 ### REQUEST_IGNORE_BATTERY_OPTIMIZATIONS
-Purpose: optional user-initiated request to exclude Focuslot from aggressive battery optimization
-that can interrupt long timers. Focuslot also works without granting this request, but background
-reliability can depend on device firmware.
 
-## Data declaration draft
+Опционально открывает системный запрос для исключения Focuslot из агрессивной экономии батареи,
+которая на некоторых устройствах может прерывать длительную работу таймера.
 
-Current Android build:
+## Декларация данных
 
-- no account;
-- no INTERNET permission;
-- no advertising SDK;
-- no third-party analytics SDK;
-- app data is stored locally;
-- Focuslot itself does not transmit projects, history or settings to the developer;
-- backup export is initiated by the user through Android's document picker;
-- if the user chooses a cloud-storage provider in the system picker, that provider handles the file
-  under its own terms.
+Фактическая конфигурация 1.0.0:
 
-Before submission, verify the final manifest and dependency tree again and make the RuStore
-declaration match the actual signed 1.0.0 binary.
+- учётная запись не требуется;
+- разрешение INTERNET отсутствует;
+- рекламных SDK нет;
+- сторонней аналитики нет;
+- проекты, история, статистика и настройки хранятся локально на устройстве;
+- Focuslot не отправляет эти данные разработчику;
+- резервную копию пользователь экспортирует вручную через системный выбор файла Android;
+- если пользователь выбирает облачное хранилище в системном диалоге Android, дальнейшая обработка
+  файла выполняется выбранным сервисом и не является передачей данных самим Focuslot.
 
-## Beta → store migration
+## Скриншоты для RuStore
 
-The beta build and store build use different package names and can be installed side-by-side.
+Нужно минимум 3 телефонных скриншота одной ориентации. Для Focuslot используем **вертикальные**.
 
-1. Beta: Settings → Переход на Focuslot 1.0 → Подготовить перенос.
-2. Save `focuslot-transfer.json`.
-3. Install Focuslot from RuStore / signed release APK.
-4. Store build: Settings → Переход на Focuslot 1.0 → Перенести данные из тестовой версии.
-5. Choose `focuslot-transfer.json`.
-6. Verify activities, statistics and settings.
-7. Only after verification, remove the beta build if desired.
+Финальный набор — 5 штук:
 
-## Release checklist
+1. **Работающий таймер**
+   - активность видна;
+   - идёт фокус-сессия;
+   - экран чистый, без открытых системных панелей.
 
-- [ ] Final launcher artwork integrated.
-- [ ] Privacy page is live at the URL used by the app.
-- [ ] Release keystore created and backed up in at least two safe places.
-- [ ] GitHub release-signing secrets configured.
-- [ ] Signed release workflow succeeds.
-- [ ] APK signature fingerprint recorded.
-- [ ] Fresh install test.
-- [ ] Beta → store migration test.
-- [ ] Timer start / pause / resume / stop.
-- [ ] +5 / +10 / +15.
-- [ ] Phase-end work and break flows.
-- [ ] Fit2 notifications checked.
-- [ ] Statistics day / week / month.
-- [ ] Activity detail tap.
-- [ ] Backup export + restore.
-- [ ] RU and EN smoke test.
-- [ ] Light / dark theme.
-- [ ] Final screenshots captured from the signed build.
-- [ ] RuStore metadata and data/permissions declarations completed.
+2. **Выбор активности**
+   - несколько реальных активностей;
+   - видна возможность быстро переключаться между ними.
+
+3. **Статистика — месяц**
+   - выбран «Месяц»;
+   - есть данные за несколько месяцев;
+   - видна строка сравнения с предыдущим месяцем.
+
+4. **Статистика по активностям**
+   - видны несколько активностей;
+   - одна раскрыта тапом;
+   - показаны подробности.
+
+5. **Настройки**
+   - лучше экран с резервной копией / вибрацией / общими настройками;
+   - не использовать блок «Переход на Focuslot 1.0» как главный рекламный скриншот.
+
+Технические ограничения RuStore для телефона:
+- PNG или JPG;
+- до 3 МБ;
+- максимум 2160×3840;
+- одна ориентация для всего набора;
+- не показывать системные элементы Android или интерфейс других приложений;
+- изображение должно показывать реально существующую функциональность.
+
+## Миграция beta → store
+
+Проверена на реальных данных пользователя:
+
+1. Beta 1.3.7 создала `focuslot-transfer.json`.
+2. Подписанная Focuslot 1.0.0 установлена рядом как отдельный package.
+3. Данные импортированы.
+4. Активности, история, статистика и настройки проверены.
+5. Старая beta-версия удалена после успешной проверки.
+
+## Статус релиза
+
+- [x] Финальная иконка интегрирована.
+- [ ] Политика конфиденциальности опубликована по публичному URL.
+- [x] Release keystore создан.
+- [x] Release keystore сохранён отдельно.
+- [x] GitHub release-signing secrets настроены.
+- [x] Signed release workflow успешно завершён.
+- [x] APK signature проверена.
+- [x] SHA-256 APK зафиксирован.
+- [x] Fresh install / отдельный package проверен.
+- [x] Beta → store migration проверена.
+- [x] Таймер проверен в ежедневном использовании.
+- [x] Пауза / продолжение / Stop проверялись в beta-цикле.
+- [x] +5 / +10 / +15 реализованы и проверялись.
+- [x] Уведомления и Fit2 прошли длительное пользовательское тестирование без текущих блокеров.
+- [x] Статистика день / неделя / месяц проверена после исправлений.
+- [x] Раскрытие деталей активности проверено после исправлений.
+- [x] Backup export + restore реализованы.
+- [x] RU / EN присутствуют.
+- [x] Светлая / тёмная тема присутствуют.
+- [ ] Сделаны финальные 3–5 скриншотов из подписанной 1.0.0.
+- [x] Тексты карточки RuStore подготовлены.
+- [x] Категория, возраст и теги выбраны.
+- [ ] Карточка приложения создана в RuStore.
+- [ ] APK загружен в RuStore.
+- [ ] Версия отправлена на модерацию.
